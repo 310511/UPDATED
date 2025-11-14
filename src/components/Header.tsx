@@ -54,6 +54,8 @@ import logoIcon from "@/assets/logo-icon.png";
 import { MobileAvailabilitySearchBar } from "@/components/MobileAvailabilitySearchBar";
 import { CountryCodeSelector } from "@/components/CountryCodeSelector";
 import { Phone } from "lucide-react";
+import { NATIONALITIES, DEFAULT_NATIONALITY } from "@/config/nationalities";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/config/currencies";
 
 interface HeaderProps {
   variant?: "default" | "compact";
@@ -69,6 +71,12 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [countryCode, setCountryCode] = useState("+971");
+  const [nationality, setNationality] = useState<string>(() => {
+    return localStorage.getItem("selectedNationality") || DEFAULT_NATIONALITY;
+  });
+  const [currency, setCurrency] = useState<string>(() => {
+    return localStorage.getItem("selectedCurrency") || DEFAULT_CURRENCY;
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -109,6 +117,20 @@ const Header = ({ variant = "default" }: HeaderProps) => {
     localStorage.setItem("language", language.code);
     // Here you would typically trigger a translation system
     console.log(`Language changed to ${language.name}`);
+  };
+
+  const handleNationalityChange = (value: string) => {
+    setNationality(value);
+    localStorage.setItem("selectedNationality", value);
+    // Dispatch event to notify other components
+    window.dispatchEvent(new CustomEvent("nationalityChanged", { detail: value }));
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    setCurrency(value);
+    localStorage.setItem("selectedCurrency", value);
+    // Dispatch event to notify other components
+    window.dispatchEvent(new CustomEvent("currencyChanged", { detail: value }));
   };
 
   const handleEmailPasswordLogin = async (email: string, password: string) => {
@@ -314,6 +336,46 @@ const Header = ({ variant = "default" }: HeaderProps) => {
                   >
                     <span>{language.name}</span>
                     {currentLanguage === language.name && (
+                      <div className="ml-auto h-2 w-2 bg-primary rounded-full" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Currency Selector - Next to Language */}
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="flex hover:bg-muted/80 transition-all duration-200 rounded-pill shadow-sm hover:shadow-md"
+                    >
+                      <span className="text-sm font-medium">
+                        {CURRENCIES.find(c => c.code === currency)?.code || "USD"}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Select Currency</p>
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent
+                align="end"
+                className="z-[10000] bg-background border shadow-lg max-h-[300px] overflow-y-auto"
+              >
+                {CURRENCIES.map((curr) => (
+                  <DropdownMenuItem
+                    key={curr.code}
+                    onClick={() => handleCurrencyChange(curr.code)}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <span>{curr.code}</span>
+                    <span>- {curr.name}</span>
+                    {currency === curr.code && (
                       <div className="ml-auto h-2 w-2 bg-primary rounded-full" />
                     )}
                   </DropdownMenuItem>

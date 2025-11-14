@@ -35,7 +35,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -45,6 +47,8 @@ import {
   CitySearchResult
 } from '@/services/hotelCodeApi';
 import { cn } from '@/lib/utils';
+import { NATIONALITIES, DEFAULT_NATIONALITY } from '@/config/nationalities';
+import { CURRENCIES, DEFAULT_CURRENCY } from '@/config/currencies';
 
 interface MobileSearchBarProps {
   className?: string;
@@ -69,10 +73,35 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
     rooms: 1
   });
 
-  // Preferences Dialog State
-  const [showPreferencesDialog, setShowPreferencesDialog] = useState(false);
-  const [nationality, setNationality] = useState('AE');
-  const [currency, setCurrency] = useState('AED');
+  // Nationality and Currency State (synced with Header)
+  const [nationality, setNationality] = useState<string>(() => {
+    return localStorage.getItem("selectedNationality") || DEFAULT_NATIONALITY;
+  });
+  const [currency, setCurrency] = useState<string>(() => {
+    return localStorage.getItem("selectedCurrency") || DEFAULT_CURRENCY;
+  });
+
+  // Listen for nationality changes from Header
+  useEffect(() => {
+    const handleNationalityChange = (event: CustomEvent) => {
+      setNationality(event.detail);
+    };
+    window.addEventListener("nationalityChanged", handleNationalityChange as EventListener);
+    return () => {
+      window.removeEventListener("nationalityChanged", handleNationalityChange as EventListener);
+    };
+  }, []);
+
+  // Listen for currency changes from Header
+  useEffect(() => {
+    const handleCurrencyChange = (event: CustomEvent) => {
+      setCurrency(event.detail);
+    };
+    window.addEventListener("currencyChanged", handleCurrencyChange as EventListener);
+    return () => {
+      window.removeEventListener("currencyChanged", handleCurrencyChange as EventListener);
+    };
+  }, []);
 
   // Room-by-room guest configuration
   const [roomGuests, setRoomGuests] = useState<RoomGuests[]>([
@@ -144,8 +173,8 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
   };
 
   const handleSearch = () => {
-    // Show preferences dialog before searching
-    setShowPreferencesDialog(true);
+    // Directly perform search with current nationality and currency values
+    performSearch();
   };
 
   const performSearch = () => {
@@ -197,8 +226,8 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
       adults: totalAdults.toString(),
       children: totalChildren.toString(),
       rooms: roomGuests.length.toString(),
-      nationality: nationality || 'AE',
-      currency: currency || 'AED'
+      nationality: nationality || DEFAULT_NATIONALITY,
+      currency: currency || DEFAULT_CURRENCY
     });
 
     // Add children ages if there are children (same as web view)
@@ -282,7 +311,6 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
     // 4. Call search API with hotel codes
     navigate(`/search?${params.toString()}`);
     setIsOpen(false);
-    setShowPreferencesDialog(false);
   };
 
   // Load all cities from custom API (same as web view)
@@ -682,6 +710,73 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
                   </Button>
                 </div>
               </div>
+
+              {/* Nationality Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700 flex items-center">
+                  <Users className="h-4 w-4 mr-2" />
+                  Guest Nationality
+                </Label>
+                <Select 
+                  value={nationality} 
+                  onValueChange={(value) => {
+                    setNationality(value);
+                    localStorage.setItem("selectedNationality", value);
+                    window.dispatchEvent(new CustomEvent("nationalityChanged", { detail: value }));
+                  }}
+                >
+                  <SelectTrigger className="h-12 px-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <SelectValue>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{NATIONALITIES.find(n => n.code === nationality)?.flag || "🇦🇪"}</span>
+                        <span className="text-sm text-gray-900 font-medium">
+                          {NATIONALITIES.find(n => n.code === nationality)?.name || "United Arab Emirates"}
+                        </span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    <SelectGroup>
+                      <SelectLabel className="px-2 py-2 text-sm font-semibold text-foreground">Guest Nationality</SelectLabel>
+                      {NATIONALITIES.map((nat) => (
+                        <SelectItem key={nat.code} value={nat.code}>
+                          {nat.flag} {nat.name} ({nat.code})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Currency Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700 flex items-center">
+                  <span className="h-4 w-4 mr-2 flex items-center justify-center text-xs font-bold">$</span>
+                  Preferred Currency
+                </Label>
+                <Select 
+                  value={currency} 
+                  onValueChange={(value) => {
+                    setCurrency(value);
+                    localStorage.setItem("selectedCurrency", value);
+                  }}
+                >
+                  <SelectTrigger className="h-12 px-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <SelectValue>
+                      <span className="text-sm text-gray-900 font-medium">
+                        {CURRENCIES.find(c => c.code === currency)?.code || "USD"}
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {CURRENCIES.map((curr) => (
+                      <SelectItem key={curr.code} value={curr.code}>
+                        {curr.code} - {curr.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Search Button */}
@@ -698,114 +793,6 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
         </SheetContent>
       </Sheet>
 
-      {/* Preferences Dialog */}
-      <Dialog open={showPreferencesDialog} onOpenChange={setShowPreferencesDialog}>
-        <DialogContent 
-          className="sm:max-w-md"
-          onInteractOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Search Preferences</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              Select your nationality and preferred currency for hotel search (optional)
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6 py-4">
-            {/* Nationality Selection */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700">
-                Nationality
-              </Label>
-              <Select value={nationality} onValueChange={setNationality}>
-                <SelectTrigger className="w-full h-12">
-                  <SelectValue placeholder="Select nationality" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  <SelectItem value="AE">🇦🇪 United Arab Emirates (AE)</SelectItem>
-                  <SelectItem value="SA">🇸🇦 Saudi Arabia (SA)</SelectItem>
-                  <SelectItem value="US">🇺🇸 United States (US)</SelectItem>
-                  <SelectItem value="GB">🇬🇧 United Kingdom (GB)</SelectItem>
-                  <SelectItem value="IN">🇮🇳 India (IN)</SelectItem>
-                  <SelectItem value="PK">🇵🇰 Pakistan (PK)</SelectItem>
-                  <SelectItem value="BD">🇧🇩 Bangladesh (BD)</SelectItem>
-                  <SelectItem value="EG">🇪🇬 Egypt (EG)</SelectItem>
-                  <SelectItem value="JO">🇯🇴 Jordan (JO)</SelectItem>
-                  <SelectItem value="KW">🇰🇼 Kuwait (KW)</SelectItem>
-                  <SelectItem value="OM">🇴🇲 Oman (OM)</SelectItem>
-                  <SelectItem value="QA">🇶🇦 Qatar (QA)</SelectItem>
-                  <SelectItem value="BH">🇧🇭 Bahrain (BH)</SelectItem>
-                  <SelectItem value="CA">🇨🇦 Canada (CA)</SelectItem>
-                  <SelectItem value="AU">🇦🇺 Australia (AU)</SelectItem>
-                  <SelectItem value="DE">🇩🇪 Germany (DE)</SelectItem>
-                  <SelectItem value="FR">🇫🇷 France (FR)</SelectItem>
-                  <SelectItem value="IT">🇮🇹 Italy (IT)</SelectItem>
-                  <SelectItem value="ES">🇪🇸 Spain (ES)</SelectItem>
-                  <SelectItem value="CN">🇨🇳 China (CN)</SelectItem>
-                  <SelectItem value="JP">🇯🇵 Japan (JP)</SelectItem>
-                  <SelectItem value="KR">🇰🇷 South Korea (KR)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Default: UAE (AE) if not selected
-              </p>
-            </div>
-
-            {/* Currency Selection */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-gray-700">
-                Preferred Currency
-              </Label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="w-full h-12">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="AED">🇦🇪 AED - UAE Dirham</SelectItem>
-                  <SelectItem value="SAR">🇸🇦 SAR - Saudi Riyal</SelectItem>
-                  <SelectItem value="USD">🇺🇸 USD - US Dollar</SelectItem>
-                  <SelectItem value="EUR">🇪🇺 EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">🇬🇧 GBP - British Pound</SelectItem>
-                  <SelectItem value="INR">🇮🇳 INR - Indian Rupee</SelectItem>
-                  <SelectItem value="PKR">🇵🇰 PKR - Pakistani Rupee</SelectItem>
-                  <SelectItem value="BDT">🇧🇩 BDT - Bangladeshi Taka</SelectItem>
-                  <SelectItem value="EGP">🇪🇬 EGP - Egyptian Pound</SelectItem>
-                  <SelectItem value="JPY">🇯🇵 JPY - Japanese Yen</SelectItem>
-                  <SelectItem value="CNY">🇨🇳 CNY - Chinese Yuan</SelectItem>
-                  <SelectItem value="AUD">🇦🇺 AUD - Australian Dollar</SelectItem>
-                  <SelectItem value="CAD">🇨🇦 CAD - Canadian Dollar</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Default: AED if not selected. Note: Payment will be in AED only.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Skip preferences - use defaults
-                setNationality('AE');
-                setCurrency('AED');
-                setShowPreferencesDialog(false);
-                performSearch();
-              }}
-              className="flex-1 sm:flex-none"
-            >
-              Skip
-            </Button>
-            <Button
-              onClick={performSearch}
-              className="flex-1 sm:flex-none bg-primary hover:bg-primary/90"
-            >
-              <Search className="h-4 w-4 mr-2" />
-              Search Now
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

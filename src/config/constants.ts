@@ -2,7 +2,7 @@
 export const APP_CONFIG = {
   // Default search parameters
   DEFAULT_GUEST_NATIONALITY: "AE",
-  DEFAULT_CURRENCY: "AED",
+  DEFAULT_CURRENCY: "USD",
   
   // Default dates (fallback when no search parameters available)
   // These will be dynamically set to today/tomorrow
