@@ -1418,13 +1418,13 @@ const HotelDetails = () => {
                           open={openSections.amenities}
                           onOpenChange={(open) => setOpenSections({ ...openSections, amenities: open })}
                         >
-                          <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
-                            <h4 className="font-semibold text-foreground">Amenities</h4>
+                          <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
                             {openSections.amenities ? (
                               <ChevronUp className="h-5 w-5 text-gray-500" />
                             ) : (
                               <ChevronDown className="h-5 w-5 text-gray-500" />
                             )}
+                            <h4 className="font-semibold text-foreground">Amenities</h4>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="pt-2 px-3 pb-3">
                             <div 
@@ -1439,13 +1439,13 @@ const HotelDetails = () => {
                           open={openSections.dining}
                           onOpenChange={(open) => setOpenSections({ ...openSections, dining: open })}
                         >
-                          <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
-                            <h4 className="font-semibold text-foreground">Dining</h4>
+                          <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
                             {openSections.dining ? (
                               <ChevronUp className="h-5 w-5 text-gray-500" />
                             ) : (
                               <ChevronDown className="h-5 w-5 text-gray-500" />
                             )}
+                            <h4 className="font-semibold text-foreground">Dining</h4>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="pt-2 px-3 pb-3">
                             <div 
@@ -1460,13 +1460,13 @@ const HotelDetails = () => {
                           open={openSections.businessAmenities}
                           onOpenChange={(open) => setOpenSections({ ...openSections, businessAmenities: open })}
                         >
-                          <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
-                            <h4 className="font-semibold text-foreground">Business Amenities</h4>
+                          <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
                             {openSections.businessAmenities ? (
                               <ChevronUp className="h-5 w-5 text-gray-500" />
                             ) : (
                               <ChevronDown className="h-5 w-5 text-gray-500" />
                             )}
+                            <h4 className="font-semibold text-foreground">Business Amenities</h4>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="pt-2 px-3 pb-3">
                             <div 
@@ -1481,13 +1481,13 @@ const HotelDetails = () => {
                           open={openSections.rooms}
                           onOpenChange={(open) => setOpenSections({ ...openSections, rooms: open })}
                         >
-                          <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
-                            <h4 className="font-semibold text-foreground">Rooms</h4>
+                          <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors gap-3">
                             {openSections.rooms ? (
                               <ChevronUp className="h-5 w-5 text-gray-500" />
                             ) : (
                               <ChevronDown className="h-5 w-5 text-gray-500" />
                             )}
+                            <h4 className="font-semibold text-foreground">Rooms</h4>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="pt-2 px-3 pb-3">
                             <div 
@@ -1510,15 +1510,15 @@ const HotelDetails = () => {
                       open={openSections.attractions}
                       onOpenChange={(open) => setOpenSections({ ...openSections, attractions: open })}
                     >
-                      <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
-                        <h3 className="font-semibold text-foreground">
-                          Nearby Attractions
-                        </h3>
+                      <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
                         {openSections.attractions ? (
                           <ChevronUp className="h-5 w-5 text-gray-500" />
                         ) : (
                           <ChevronDown className="h-5 w-5 text-gray-500" />
                         )}
+                        <h3 className="font-semibold text-foreground">
+                          Nearby Attractions
+                        </h3>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div 
@@ -1539,15 +1539,15 @@ const HotelDetails = () => {
                       open={openSections.location}
                       onOpenChange={(open) => setOpenSections({ ...openSections, location: open })}
                     >
-                      <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
-                        <h3 className="font-semibold text-foreground">
-                          Location
-                        </h3>
+                      <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
                         {openSections.location ? (
                           <ChevronUp className="h-5 w-5 text-gray-500" />
                         ) : (
                           <ChevronDown className="h-5 w-5 text-gray-500" />
                         )}
+                        <h3 className="font-semibold text-foreground">
+                          Location
+                        </h3>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div 
@@ -1583,15 +1583,15 @@ const HotelDetails = () => {
                       open={openSections.fees}
                       onOpenChange={(open) => setOpenSections({ ...openSections, fees: open })}
                     >
-                      <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
-                        <h3 className="font-semibold text-foreground">
-                          Fees & Charges
-                        </h3>
+                      <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
                         {openSections.fees ? (
                           <ChevronUp className="h-5 w-5 text-gray-500" />
                         ) : (
                           <ChevronDown className="h-5 w-5 text-gray-500" />
                         )}
+                        <h3 className="font-semibold text-foreground">
+                          Fees & Charges
+                        </h3>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div 
@@ -1612,15 +1612,15 @@ const HotelDetails = () => {
                       open={openSections.policies}
                       onOpenChange={(open) => setOpenSections({ ...openSections, policies: open })}
                     >
-                      <CollapsibleTrigger className="flex items-center justify-end w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
-                        <h3 className="font-semibold text-foreground">
-                          Policies
-                        </h3>
+                      <CollapsibleTrigger className="flex items-center justify-start w-full hover:bg-gray-50 rounded-lg p-3 transition-colors -mx-3 -mt-3 mb-2 gap-3">
                         {openSections.policies ? (
                           <ChevronUp className="h-5 w-5 text-gray-500" />
                         ) : (
                           <ChevronDown className="h-5 w-5 text-gray-500" />
                         )}
+                        <h3 className="font-semibold text-foreground">
+                          Policies
+                        </h3>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div 
