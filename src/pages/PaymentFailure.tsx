@@ -6,8 +6,10 @@ import { XCircle, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { checkTelrOrderStatus } from '@/services/telrPaymentApi';
+import { useTranslation } from '@/contexts/TranslationContext';
 
 const PaymentFailure = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
@@ -59,7 +61,7 @@ const PaymentFailure = () => {
             <CardContent className="pt-16 pb-16">
               <div className="flex flex-col items-center justify-center space-y-4">
                 <Loader2 className="h-16 w-16 text-primary animate-spin" />
-                <h2 className="text-2xl font-bold">Checking Payment Status...</h2>
+                <h2 className="text-2xl font-bold">{t?.checkingPaymentStatus || "Checking Payment Status..."}</h2>
               </div>
             </CardContent>
           </Card>
@@ -80,17 +82,17 @@ const PaymentFailure = () => {
               <XCircle className="h-20 w-20 text-red-600" />
             </div>
             <CardTitle className="text-center text-3xl text-red-700">
-              Payment Declined
+              {t?.paymentDeclined || "Payment Declined"}
             </CardTitle>
           </CardHeader>
           
           <CardContent className="space-y-6">
             <div className="text-center">
               <p className="text-lg text-red-800">
-                Unfortunately, your payment was not successful.
+                {t?.paymentNotSuccessful || "Unfortunately, your payment was not successful."}
               </p>
               <p className="text-sm text-red-600 mt-2">
-                Your booking has not been confirmed. No charges have been made to your account.
+                {t?.bookingNotConfirmed || "Your booking has not been confirmed. No charges have been made to your account."}
               </p>
             </div>
 

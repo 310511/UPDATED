@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatDateDDMMYY } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/contexts/TranslationContext";
 import { 
   getCountryList, 
   getCityList, 
@@ -39,14 +40,88 @@ export const DestinationPicker = ({
   isOpen,
   onOpenChange,
 }: DestinationPickerProps) => {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState(value);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-typing animation state
+  const [autoTypingText, setAutoTypingText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Trending destinations - starting with Dubai
+  const trendingDestinations = ["Dubai", "New York", "Jeddah", "Riyadh", "Paris", "London"];
+  const [currentDestinationIndex, setCurrentDestinationIndex] = useState(0);
 
   // NEW: City-first search approach
   const [allCities, setAllCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [citySearchTerm, setCitySearchTerm] = useState('');
   const [selectedCityData, setSelectedCityData] = useState<CitySearchResult | null>(null);
+
+  // Auto-typing effect - only when no value and user hasn't interacted
+  useEffect(() => {
+    if (value || hasUserInteracted || isOpen) {
+      setIsTyping(false);
+      setAutoTypingText("");
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      return;
+    }
+
+    const deleteDestination = (dest: string) => {
+      let currentIndex = dest.length;
+      
+      const deleteChar = () => {
+        if (currentIndex > 0) {
+          setAutoTypingText(dest.slice(0, currentIndex - 1));
+          currentIndex--;
+          typingTimeoutRef.current = setTimeout(deleteChar, 50); // Faster deletion
+        } else {
+          // Move to next destination
+          setCurrentDestinationIndex((prev) => (prev + 1) % trendingDestinations.length);
+        }
+      };
+      
+      deleteChar();
+    };
+
+    const typeDestination = (dest: string) => {
+      let currentIndex = 0;
+      setAutoTypingText("");
+      
+      const typeChar = () => {
+        if (currentIndex < dest.length) {
+          setAutoTypingText(dest.slice(0, currentIndex + 1));
+          currentIndex++;
+          typingTimeoutRef.current = setTimeout(typeChar, 100); // Typing speed: 100ms per character
+        } else {
+          // Finished typing, wait then delete and move to next
+          typingTimeoutRef.current = setTimeout(() => {
+            deleteDestination(dest);
+          }, 2000); // Show for 2 seconds before deleting
+        }
+      };
+      
+      typeChar();
+    };
+
+    // Start auto-typing after a short delay
+    const startDelay = setTimeout(() => {
+      setIsTyping(true);
+      typeDestination(trendingDestinations[currentDestinationIndex]);
+    }, 1000);
+
+    return () => {
+      clearTimeout(startDelay);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, hasUserInteracted, isOpen, currentDestinationIndex]);
 
   // Load all cities on component mount
   useEffect(() => {
@@ -104,6 +179,16 @@ export const DestinationPicker = ({
     setInputValue(newValue);
     setCitySearchTerm(newValue);
     onChange(newValue);
+    setHasUserInteracted(true);
+    setIsTyping(false);
+    setAutoTypingText("");
+  };
+  
+  const handleFieldClick = () => {
+    setHasUserInteracted(true);
+    setIsTyping(false);
+    setAutoTypingText("");
+    onOpenChange(!isOpen);
   };
 
   // Filter cities based on search term
@@ -126,18 +211,27 @@ export const DestinationPicker = ({
     <div className="relative">
       <div
         className="flex flex-col items-start space-y-1 cursor-pointer p-4 hover:bg-muted/50 rounded-lg transition-all duration-200 min-w-[200px] group"
-        onClick={() => onOpenChange(!isOpen)}
+        onClick={handleFieldClick}
       >
         <Label className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-          Where are you going?
+          {t?.whereAreYouGoing || "Where are you going?"}
         </Label>
         <div
           className={cn(
-            "text-base font-normal transition-colors truncate w-full",
+            "text-base font-normal transition-colors truncate w-full relative",
             value ? "text-foreground font-medium" : "text-muted-foreground"
           )}
         >
-          {value || "Search destinations"}
+          {value ? (
+            value
+          ) : isTyping && autoTypingText ? (
+            <span className="inline-flex items-center">
+              {autoTypingText}
+              <span className="inline-block w-0.5 h-4 bg-primary ml-1 animate-pulse" />
+            </span>
+          ) : (
+            t?.searchDestinations || "Search destinations"
+          )}
         </div>
       </div>
 
@@ -150,13 +244,13 @@ export const DestinationPicker = ({
             <div className="space-y-3">
               {/* City Selection - Single Step */}
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">Search City</h4>
+                <h4 className="font-medium text-sm">{t?.searchCity || "Search City"}</h4>
                 
                 {/* Search input for cities */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search cities..."
+                    placeholder={t?.searchCities || "Search cities..."}
                     value={citySearchTerm}
                     onChange={handleInputChange}
                     className="pl-10 h-9 text-sm"
@@ -218,6 +312,7 @@ export const DatePicker = ({
   type,
   minDate,
 }: DatePickerProps) => {
+  const { t } = useTranslation();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
@@ -232,7 +327,7 @@ export const DatePicker = ({
         onClick={() => onOpenChange(!isOpen)}
       >
         <Label className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-          {type === "checkin" ? "Check in" : "Check out"}
+          {type === "checkin" ? (t?.checkIn || "Check in") : (t?.checkOut || "Check out")}
         </Label>
         <div
           className={cn(
@@ -304,6 +399,7 @@ export const GuestSelector = ({
   isOpen,
   onOpenChange,
 }: GuestSelectorProps) => {
+  const { t } = useTranslation();
   const totalGuests = adults + children;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [localChildrenAges, setLocalChildrenAges] = useState<number[]>(childrenAges);
@@ -363,12 +459,12 @@ export const GuestSelector = ({
         onClick={() => onOpenChange(!isOpen)}
       >
         <Label className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-          Guests
+          {t?.guests || "Guests"}
         </Label>
         <div className="text-base font-normal transition-colors">
   {hasApplied
-    ? `${totalGuests} guest${totalGuests > 1 ? "s" : ""} • ${rooms} room${rooms > 1 ? "s" : ""}`
-    : "Enter details"}
+    ? `${totalGuests} ${t?.guests?.toLowerCase() || "guest"}${totalGuests > 1 ? "" : ""} • ${rooms} ${t?.room?.toLowerCase() || "room"}${rooms > 1 ? "" : ""}`
+    : (t?.enterDetails || "Enter details")}
 </div>
 
 
@@ -385,9 +481,9 @@ export const GuestSelector = ({
               {/* Rooms Selector - Only functional control */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-sm">Rooms</div>
+                  <div className="font-medium text-sm">{t?.rooms || "Rooms"}</div>
                   <div className="text-xs text-muted-foreground">
-                    Number of rooms
+                    {t?.rooms ? `${t.rooms} ${t.room || ""}` : "Number of rooms"}
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -626,6 +722,7 @@ interface SearchButtonProps {
 }
 
 export const SearchButton = ({ onSearch, expanded }: SearchButtonProps) => {
+  const { t } = useTranslation();
   return (
     <Button
       onClick={onSearch}
@@ -639,7 +736,7 @@ export const SearchButton = ({ onSearch, expanded }: SearchButtonProps) => {
       <Search
         className={cn("transition-all", expanded ? "h-6 w-6 mr-3" : "h-6 w-6")}
       />
-      {expanded && "Search"}
+      {expanded && (t?.search || "Search")}
     </Button>
   );
 };

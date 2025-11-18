@@ -194,6 +194,13 @@ iframe[src*="n8n"] {
   top: auto !important;
 }
 
+/* Move chatbot upward on mobile to avoid hiding Deals section */
+@media (max-width: 768px) {
+  .animated-avatar {
+    bottom: 5rem !important; /* Moved up from 2rem (32px) to 5rem (80px) */
+  }
+}
+
 /* Override any inline styles that might position it on the right */
 .animated-avatar[style*="right"] {
   right: auto !important;
@@ -854,4 +861,50 @@ body {
     padding: 0.4375rem 0.875rem;
     font-size: 0.75rem;
   }
+}
+
+/* Force LTR layout for entire application - override RTL direction */
+html,
+body,
+#root,
+#root > * {
+  direction: ltr !important;
+}
+
+/* Force LTR layout for header - override RTL direction */
+header,
+header > *,
+header > * > * {
+  direction: ltr !important;
+}
+
+/* Ensure flex layouts in header stay LTR */
+header .flex {
+  direction: ltr !important;
+}
+
+/* Override any RTL-specific CSS for header elements */
+[dir="rtl"] header,
+[dir="rtl"] header > *,
+[dir="rtl"] header > * > * {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Force LTR for all pages and sections */
+[dir="rtl"],
+[dir="rtl"] *,
+body[dir="rtl"],
+body[dir="rtl"] *,
+html[dir="rtl"],
+html[dir="rtl"] * {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Ensure all main content areas stay LTR */
+main,
+section,
+article {
+  direction: ltr !important;
 }

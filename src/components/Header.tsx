@@ -53,9 +53,9 @@ import { Grid3X3, Map } from "lucide-react";
 import logoIcon from "@/assets/logo-icon.png";
 import { MobileAvailabilitySearchBar } from "@/components/MobileAvailabilitySearchBar";
 import { CountryCodeSelector } from "@/components/CountryCodeSelector";
-import { Phone } from "lucide-react";
 import { NATIONALITIES, DEFAULT_NATIONALITY } from "@/config/nationalities";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/config/currencies";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 interface HeaderProps {
   variant?: "default" | "compact";
@@ -64,8 +64,20 @@ interface HeaderProps {
 const Header = ({ variant = "default" }: HeaderProps) => {
   console.log("Header component is rendering");
   const { user, isAuthenticated, logout } = useAuth();
+  const { language, setLanguage, t } = useTranslation();
+  
+  const languages = [
+    { code: "en", name: "English", flag: "🇺🇸" },
+    { code: "ar", name: "العربية", flag: "🇸🇦" },
+    { code: "fr", name: "Français", flag: "🇫🇷" },
+  ];
+  
   const [isOpen, setIsOpen] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState("English");
+  const [currentLanguage, setCurrentLanguage] = useState(() => {
+    const storedLang = localStorage.getItem("language") || "en";
+    const langObj = languages.find(l => l.code === storedLang);
+    return langObj?.name || "English";
+  });
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -91,33 +103,37 @@ const Header = ({ variant = "default" }: HeaderProps) => {
   const children = isHotelDetailsPage ? parseInt(searchParams.get("children") || "0") : 0;
   const rooms = isHotelDetailsPage ? parseInt(searchParams.get("rooms") || "1") : 1;
 
+  // Get navigation items with translations
   const navigation = [
-    { name: "Hotels", href: "/", icon: Home, customIcon: homeIcon },
+    { name: t?.hotels || "Hotels", href: "/", icon: Home, customIcon: homeIcon },
     {
-      name: "Destinations",
+      name: t?.destinations || "Destinations",
       href: "/destinations",
       icon: MapPin,
       customIcon: destinationIcon,
     },
-    { name: "Deals", href: "/deals", icon: Tag, customIcon: dealsIcon },
+    { name: t?.deals || "Deals", href: "/deals", icon: Tag, customIcon: dealsIcon },
   ];
 
-  const languages = [
-    { code: "en", name: "English", flag: "🇺🇸" },
-    { code: "ar", name: "العربية", flag: "🇸🇦" },
-    { code: "fr", name: "Français", flag: "🇫🇷" },
-  ];
-
-  const handleLanguageChange = (language: {
+  const handleLanguageChange = (lang: {
     code: string;
     name: string;
     flag: string;
   }) => {
-    setCurrentLanguage(language.name);
-    localStorage.setItem("language", language.code);
-    // Here you would typically trigger a translation system
-    console.log(`Language changed to ${language.name}`);
+    setCurrentLanguage(lang.name);
+    setLanguage(lang.code); // Use translation context
+    // Direction is handled globally in TranslationContext - always LTR layout
   };
+
+  // Sync currentLanguage with language from context
+  useEffect(() => {
+    const langObj = languages.find(l => l.code === language);
+    if (langObj) {
+      setCurrentLanguage(langObj.name);
+    }
+  }, [language]);
+
+  // Note: Document direction is handled by TranslationContext
 
   const handleNationalityChange = (value: string) => {
     setNationality(value);
@@ -206,7 +222,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
         setShowLoginDialog(false);
         
         // Show success message
-        alert(`Welcome, ${signupData.first_name}! Your account has been created successfully.`);
+        alert(`Welcome "${signupData.first_name}", your account has been created successfully with HotelRBS. Book seamless hotels worldwide with us. Thank you.`);
         
         // Optionally redirect or update UI
         window.location.reload(); // Refresh to show logged-in state
@@ -316,7 +332,7 @@ const Header = ({ variant = "default" }: HeaderProps) => {
                       size="icon"
                       className="flex hover:bg-muted/80 transition-all duration-200 rounded-pill shadow-sm hover:shadow-md"
                     >
-                      <span className="text-sm font-medium">EN</span>
+                      <span className="text-sm font-medium uppercase">{language || "EN"}</span>
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
@@ -847,12 +863,11 @@ const Header = ({ variant = "default" }: HeaderProps) => {
                         onValueChange={setCountryCode}
                       />
                       <div className="relative flex-1">
-                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                         <Input
                           name="phone"
                           type="tel"
                           placeholder="Enter your phone number"
-                          className="p-3 pl-10 text-base rounded-l-none border-l-0"
+                          className="p-3 px-3 text-base rounded-l-none border-l-0"
                           required
                         />
                       </div>

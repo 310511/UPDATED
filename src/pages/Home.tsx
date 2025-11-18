@@ -16,8 +16,10 @@ import { Star, MapPin, Heart, Sparkles } from "lucide-react";
 import SimpleHotelCard from "@/components/SimpleHotelCard";
 import { hotels } from "@/data/hotels";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Home = () => {
+  const { t } = useTranslation();
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const featuredHotels = hotels.slice(0, 6);
@@ -52,43 +54,43 @@ const Home = () => {
           <div className="max-w-7xl mx-auto px-6 lg:px-12">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-                Browse by Category
+                {t?.browseByCategory || "Browse by Category"}
               </h2>
               <p className="text-lg text-muted-foreground">
-                Find the perfect accommodation for your needs
+                {t?.findPerfectAccommodation || "Find the perfect accommodation for your needs"}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
-                  name: "Luxury Hotels",
+                  name: t?.luxuryHotels || "Luxury Hotels",
                   image:
                     "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=600&h=400&fit=crop&q=80",
-                  description: "5-star accommodations",
+                  description: t?.starAccommodations || "5-star accommodations",
                   link: "/search?category=luxury",
                   icon: "✨",
                 },
                 {
-                  name: "Business Hotels",
+                  name: t?.businessHotels || "Business Hotels",
                   image:
                     "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&h=400&fit=crop&q=80",
-                  description: "Perfect for business trips",
+                  description: t?.perfectForBusinessTrips || "Perfect for business trips",
                   link: "/search?category=business",
                   icon: "💼",
                 },
                 {
-                  name: "Family Suites",
+                  name: t?.familySuites || "Family Suites",
                   image:
                     "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop&q=80",
-                  description: "Spacious family rooms",
+                  description: t?.spaciousFamilyRooms || "Spacious family rooms",
                   link: "/search?category=family",
                   icon: "👨‍👩‍👧‍👦",
                 },
                 {
-                  name: "Weekend Getaways",
+                  name: t?.weekendGetaways || "Weekend Getaways",
                   image:
                     "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&h=400&fit=crop&q=80",
-                  description: "Perfect for short trips",
+                  description: t?.perfectForShortTrips || "Perfect for short trips",
                   link: "/search?category=weekend",
                   icon: "🏖️",
                 },
@@ -135,14 +137,14 @@ const Home = () => {
                 <div className="flex items-center gap-3 mb-3">
                   <Badge className="bg-secondary-coral/10 text-secondary-coral border-secondary-coral/20">
                     <Star className="w-4 h-4 mr-1 inline fill-current" />
-                    Featured
+                    {t?.featured || "Featured"}
                   </Badge>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
-                  Featured Hotels
+                  {t?.featuredHotels || "Featured Hotels"}
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  Hand-picked accommodations for your perfect stay
+                  {t?.handPickedAccommodations || "Hand-picked accommodations for your perfect stay"}
                 </p>
               </div>
               <Link to="/search">
@@ -150,7 +152,7 @@ const Home = () => {
                   variant="outline" 
                   className="border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 font-semibold"
                 >
-                  View All
+                  {t?.viewAll || "View All"}
                 </Button>
               </Link>
             </div>
@@ -175,15 +177,15 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 gap-4">
               <div>
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
-                  ✨ Luxury Hotels
+                  ✨ {t?.luxuryHotels || "Luxury Hotels"}
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  Experience the finest hospitality
+                  {t?.experienceFinestHospitality || "Experience the finest hospitality"}
                 </p>
               </div>
               <Link to="/search?category=luxury">
                 <Button variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 font-semibold">
-                  View All Luxury
+                  {t?.viewAllLuxury || "View All Luxury"}
                 </Button>
               </Link>
             </div>
@@ -208,15 +210,15 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 gap-4">
               <div>
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
-                  💼 Business Hotels
+                  💼 {t?.businessHotels || "Business Hotels"}
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  Perfect for business travelers
+                  {t?.perfectForBusinessTravelers || "Perfect for business travelers"}
                 </p>
               </div>
               <Link to="/search?category=business">
                 <Button variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 font-semibold">
-                  View All Business
+                  {t?.viewAllBusiness || "View All Business"}
                 </Button>
               </Link>
             </div>
@@ -241,15 +243,15 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 gap-4">
               <div>
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
-                  🏖️ Weekend Getaways
+                  🏖️ {t?.weekendGetaways || "Weekend Getaways"}
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  Perfect escapes for short trips
+                  {t?.perfectEscapes || "Perfect escapes for short trips"}
                 </p>
               </div>
               <Link to="/search?category=weekend">
                 <Button variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 font-semibold">
-                  View All Getaways
+                  {t?.viewAllGetaways || "View All Getaways"}
                 </Button>
               </Link>
             </div>
@@ -274,15 +276,15 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 gap-4">
               <div>
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
-                  👨‍👩‍👧‍👦 Family-Friendly Hotels
+                  👨‍👩‍👧‍👦 {t?.familyFriendlyHotels || "Family-Friendly Hotels"}
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  Great accommodations for the whole family
+                  {t?.greatAccommodations || "Great accommodations for the whole family"}
                 </p>
               </div>
               <Link to="/search?category=family">
                 <Button variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 font-semibold">
-                  View All Family
+                  {t?.viewAllFamily || "View All Family"}
                 </Button>
               </Link>
             </div>

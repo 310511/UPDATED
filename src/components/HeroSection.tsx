@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, Calendar, Users, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 interface HeroSectionProps {
   variant?: "home" | "search";
@@ -14,12 +15,23 @@ interface HeroSectionProps {
 
 const HeroSection = ({ variant = "home", showSearch = true }: HeroSectionProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [scrollY, setScrollY] = useState(0);
   const [destination, setDestination] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(2);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Auto-typing animation state
+  const [autoTypingText, setAutoTypingText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Trending destinations - starting with Dubai
+  const trendingDestinations = ["Dubai", "New York", "Jeddah", "Riyadh", "Paris", "London"];
+  const [currentDestinationIndex, setCurrentDestinationIndex] = useState(0);
 
   // Background images array for dynamic rotation
   const backgroundImages = [
@@ -45,6 +57,67 @@ const HeroSection = ({ variant = "home", showSearch = true }: HeroSectionProps) 
 
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
+
+  // Auto-typing effect for destination input
+  useEffect(() => {
+    if (destination || hasUserInteracted || !showSearch) {
+      setIsTyping(false);
+      setAutoTypingText("");
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      return;
+    }
+
+    const deleteDestination = (dest: string) => {
+      let currentIndex = dest.length;
+      
+      const deleteChar = () => {
+        if (currentIndex > 0) {
+          setAutoTypingText(dest.slice(0, currentIndex - 1));
+          currentIndex--;
+          typingTimeoutRef.current = setTimeout(deleteChar, 50);
+        } else {
+          setCurrentDestinationIndex((prev) => (prev + 1) % trendingDestinations.length);
+        }
+      };
+      
+      deleteChar();
+    };
+
+    const typeDestination = (dest: string) => {
+      let currentIndex = 0;
+      setAutoTypingText("");
+      
+      const typeChar = () => {
+        if (currentIndex < dest.length) {
+          setAutoTypingText(dest.slice(0, currentIndex + 1));
+          currentIndex++;
+          typingTimeoutRef.current = setTimeout(typeChar, 100);
+        } else {
+          typingTimeoutRef.current = setTimeout(() => {
+            deleteDestination(dest);
+          }, 2000);
+        }
+      };
+      
+      typeChar();
+    };
+
+    // Start auto-typing after a short delay
+    const startDelay = setTimeout(() => {
+      setIsTyping(true);
+      typeDestination(trendingDestinations[currentDestinationIndex]);
+    }, 1500);
+
+    return () => {
+      clearTimeout(startDelay);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destination, hasUserInteracted, showSearch, currentDestinationIndex]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +201,7 @@ const HeroSection = ({ variant = "home", showSearch = true }: HeroSectionProps) 
               style={{ color: '#ffffff' }}
             >
               <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 mr-2 inline fill-white" />
-              Trusted by 1M+ travelers worldwide
+              {t?.trustedBy || "Trusted by 1M+ travelers worldwide"}
             </Badge>
           </div>
 
@@ -137,13 +210,13 @@ const HeroSection = ({ variant = "home", showSearch = true }: HeroSectionProps) 
             <div className="bg-white/90 backdrop-blur-md rounded-3xl md:rounded-[2rem] p-6 md:p-10 lg:p-12 shadow-2xl border-2 border-white/50 max-w-5xl mx-auto">
               <div className="space-y-3 md:space-y-6">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-display font-bold text-gray-900 leading-tight px-2">
-                  Find Your Perfect
+                  {t?.findYourPerfect || "Find Your Perfect"}
                   <span className="block bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent mt-2 md:mt-3">
-                    Dream Destination
+                    {t?.dreamDestination || "Dream Destination"}
                   </span>
                 </h1>
                 <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto font-medium px-4 leading-relaxed">
-                  Discover amazing hotels, resorts, and stays at the best prices
+                  {t?.discoverAmazingHotels || "Discover amazing hotels, resorts, and stays at the best prices"}
                 </p>
               </div>
             </div>
@@ -173,13 +246,31 @@ const HeroSection = ({ variant = "home", showSearch = true }: HeroSectionProps) 
                       </label>
                       <div className="relative">
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
-                        <Input
-                          type="text"
-                          placeholder="Where are you going?"
-                          value={destination}
-                          onChange={(e) => setDestination(e.target.value)}
-                          className="pl-11 h-14 text-base border-2 border-gray-200 focus:border-primary rounded-xl transition-all shadow-sm hover:shadow-md"
-                        />
+                        <div className="relative w-full">
+                          <Input
+                            type="text"
+                            placeholder="Where are you going?"
+                            value={destination}
+                            onChange={(e) => {
+                              setDestination(e.target.value);
+                              setHasUserInteracted(true);
+                              setIsTyping(false);
+                              setAutoTypingText("");
+                            }}
+                            onFocus={() => {
+                              setHasUserInteracted(true);
+                              setIsTyping(false);
+                              setAutoTypingText("");
+                            }}
+                            className="pl-11 h-14 text-base border-2 border-gray-200 focus:border-primary rounded-xl transition-all shadow-sm hover:shadow-md"
+                          />
+                          {!destination && isTyping && autoTypingText && (
+                            <div className="absolute left-11 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 flex items-center">
+                              {autoTypingText}
+                              <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -273,7 +364,7 @@ const HeroSection = ({ variant = "home", showSearch = true }: HeroSectionProps) 
           <div className="mt-8 md:mt-16 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
             <div className="bg-white/90 backdrop-blur-md rounded-2xl md:rounded-3xl px-6 md:px-8 py-4 md:py-5 shadow-xl border-2 border-white/50 max-w-5xl mx-auto mb-4 md:mb-8">
               <p className="text-center text-gray-900 text-xs md:text-sm font-bold mb-0 uppercase tracking-widest">
-                Popular Destinations
+                {t?.popularDestinations || "Popular Destinations"}
               </p>
             </div>
             <div className="max-w-5xl mx-auto px-4 md:px-8">

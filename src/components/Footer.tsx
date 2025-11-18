@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { Shield, Phone, Mail, MapPin, Award, CreditCard, Headphones } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import logoIcon from "@/assets/logo-icon.png";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Footer = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -14,23 +16,23 @@ const Footer = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div className="flex flex-col items-center">
               <Shield className="w-10 h-10 mb-3" />
-              <h4 className="font-bold text-sm md:text-base mb-1">Secure Booking</h4>
-              <p className="text-xs md:text-sm text-white/80">SSL Encrypted</p>
+              <h4 className="font-bold text-sm md:text-base mb-1">{t?.secureBooking || "Secure Booking"}</h4>
+              <p className="text-xs md:text-sm text-white/80">{t?.sslEncrypted || "SSL Encrypted"}</p>
             </div>
             <div className="flex flex-col items-center">
               <Award className="w-10 h-10 mb-3" />
-              <h4 className="font-bold text-sm md:text-base mb-1">Best Price Guarantee</h4>
-              <p className="text-xs md:text-sm text-white/80">Lowest Prices</p>
+              <h4 className="font-bold text-sm md:text-base mb-1">{t?.bestPriceGuarantee || "Best Price Guarantee"}</h4>
+              <p className="text-xs md:text-sm text-white/80">{t?.lowestPrices || "Lowest Prices"}</p>
             </div>
             <div className="flex flex-col items-center">
               <Headphones className="w-10 h-10 mb-3" />
-              <h4 className="font-bold text-sm md:text-base mb-1">24/7 Support</h4>
-              <p className="text-xs md:text-sm text-white/80">Always Here</p>
+              <h4 className="font-bold text-sm md:text-base mb-1">{t?.support247 || "24/7 Support"}</h4>
+              <p className="text-xs md:text-sm text-white/80">{t?.alwaysHere || "Always Here"}</p>
             </div>
             <div className="flex flex-col items-center">
               <CreditCard className="w-10 h-10 mb-3" />
-              <h4 className="font-bold text-sm md:text-base mb-1">Flexible Payment</h4>
-              <p className="text-xs md:text-sm text-white/80">Multiple Options</p>
+              <h4 className="font-bold text-sm md:text-base mb-1">{t?.flexiblePayment || "Flexible Payment"}</h4>
+              <p className="text-xs md:text-sm text-white/80">{t?.multipleOptions || "Multiple Options"}</p>
             </div>
           </div>
         </div>
@@ -49,7 +51,7 @@ const Footer = () => {
               />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-sm">
-              Your trusted partner for finding perfect accommodations worldwide. We connect travelers with exceptional stays, offering the best prices and seamless booking experience.
+              {t?.footerDescription || "Your trusted partner for finding perfect accommodations worldwide. We connect travelers with exceptional stays, offering the best prices and seamless booking experience."}
             </p>
             
             {/* Contact Info */}
@@ -72,51 +74,51 @@ const Footer = () => {
             <div className="flex flex-wrap gap-3">
               <Badge variant="outline" className="text-xs">
                 <Shield className="w-3 h-3 mr-1" />
-                Verified
+                {t?.verified || "Verified"}
               </Badge>
               <Badge variant="outline" className="text-xs">
                 <Award className="w-3 h-3 mr-1" />
-                ISO Certified
+                {t?.isoCertified || "ISO Certified"}
               </Badge>
             </div>
           </div>
           
           {/* Booking Links */}
           <div>
-            <h4 className="font-bold text-foreground text-base mb-4">Booking</h4>
+            <h4 className="font-bold text-foreground text-base mb-4">{t?.booking || "Booking"}</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/destinations" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Browse Destinations</Link></li>
-              <li><Link to="/deals" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Special Offers</Link></li>
-              <li><Link to="/search" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Search Hotels</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Group Bookings</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Corporate Travel</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Gift Cards</Link></li>
+              <li><Link to="/destinations" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.browseDestinations || "Browse Destinations"}</Link></li>
+              <li><Link to="/deals" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.specialOffers || "Special Offers"}</Link></li>
+              <li><Link to="/search" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.searchHotels || "Search Hotels"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.groupBookings || "Group Bookings"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.corporateTravel || "Corporate Travel"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.giftCards || "Gift Cards"}</Link></li>
             </ul>
           </div>
           
           {/* Support Links */}
           <div>
-            <h4 className="font-bold text-foreground text-base mb-4">Support</h4>
+            <h4 className="font-bold text-foreground text-base mb-4">{t?.support || "Support"}</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Help Center</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Customer Service</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Booking Changes</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Cancellation Policy</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Travel Insurance</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">FAQ</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.helpCenter || "Help Center"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.customerService || "Customer Service"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.bookingChanges || "Booking Changes"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.cancellationPolicy || "Cancellation Policy"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.travelInsurance || "Travel Insurance"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.faq || "FAQ"}</Link></li>
             </ul>
           </div>
           
           {/* Company Links */}
           <div>
-            <h4 className="font-bold text-foreground text-base mb-4">Company</h4>
+            <h4 className="font-bold text-foreground text-base mb-4">{t?.company || "Company"}</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">About Us</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Careers</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Press & Media</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Partner with Us</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Investor Relations</Link></li>
-              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">Blog</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.aboutUs || "About Us"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.careers || "Careers"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.pressMedia || "Press & Media"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.partnerWithUs || "Partner with Us"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.investorRelations || "Investor Relations"}</Link></li>
+              <li><Link to="#" className="text-muted-foreground hover:text-primary transition-colors hover:translate-x-1 inline-block">{t?.blog || "Blog"}</Link></li>
             </ul>
           </div>
         </div>
@@ -126,13 +128,13 @@ const Footer = () => {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             {/* Copyright & Legal Links */}
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
-              <p>&copy; {currentYear} HotelRBS, Inc. All rights reserved.</p>
+              <p>&copy; {currentYear} HotelRBS, Inc. {t?.allRightsReserved || "All rights reserved."}</p>
               <div className="flex items-center gap-4">
-                <Link to="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
+                <Link to="#" className="hover:text-primary transition-colors">{t?.privacyPolicy || "Privacy Policy"}</Link>
                 <span className="text-gray-300">|</span>
-                <Link to="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+                <Link to="#" className="hover:text-primary transition-colors">{t?.termsOfService || "Terms of Service"}</Link>
                 <span className="text-gray-300">|</span>
-                <Link to="#" className="hover:text-primary transition-colors">Sitemap</Link>
+                <Link to="#" className="hover:text-primary transition-colors">{t?.sitemap || "Sitemap"}</Link>
               </div>
             </div>
             
@@ -183,7 +185,7 @@ const Footer = () => {
       <div className="bg-white border-t border-gray-200 py-4">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-            <p>We accept:</p>
+            <p>{t?.weAccept || "We accept:"}</p>
             <div className="flex items-center gap-4 flex-wrap justify-center">
               <span className="px-3 py-1.5 border border-gray-300 rounded bg-white">💳 Visa</span>
               <span className="px-3 py-1.5 border border-gray-300 rounded bg-white">💳 Mastercard</span>

@@ -14,6 +14,7 @@ import {
   Bookmark,
   ArrowRight
 } from "lucide-react";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 interface DiscoveryItem {
   id: string;
@@ -106,14 +107,15 @@ const discoveryItems: DiscoveryItem[] = [
 ];
 
 const DiscoveryFeed = () => {
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [savedItems, setSavedItems] = useState<Set<string>>(new Set());
 
   const filters = [
-    { id: "all", label: "All", icon: TrendingUp },
-    { id: "destination", label: "Destinations", icon: MapPin },
-    { id: "experience", label: "Experiences", icon: Camera },
-    { id: "review", label: "Reviews", icon: MessageCircle },
+    { id: "all", label: t?.all || "All", icon: TrendingUp },
+    { id: "destination", label: t?.destinations || "Destinations", icon: MapPin },
+    { id: "experience", label: t?.experiences || "Experiences", icon: Camera },
+    { id: "review", label: t?.reviews || "Reviews", icon: MessageCircle },
   ];
 
   const filteredItems = activeFilter === "all" 
@@ -139,13 +141,13 @@ const DiscoveryFeed = () => {
         <div className="text-center mb-12">
           <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 px-4 py-2">
             <Camera className="w-4 h-4 mr-2 inline" />
-            Get Inspired
+            {t?.getInspired || "Get Inspired"}
           </Badge>
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
-            Discover Your Next Adventure
+            {t?.discoverYourNextAdventure || "Discover Your Next Adventure"}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Explore curated experiences, read traveler stories, and find your perfect destination
+            {t?.exploreCuratedExperiences || "Explore curated experiences, read traveler stories, and find your perfect destination"}
           </p>
         </div>
 
@@ -198,7 +200,7 @@ const DiscoveryFeed = () => {
                   <div className="absolute top-4 left-4">
                     <Badge className="bg-yellow-500 text-black font-bold px-3 py-1 shadow-lg border-0">
                       <Star className="w-3 h-3 mr-1 fill-black" />
-                      Featured
+                      {t?.featured || "Featured"}
                     </Badge>
                   </div>
                 )}

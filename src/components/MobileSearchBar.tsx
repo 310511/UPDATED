@@ -49,6 +49,7 @@ import {
 import { cn } from '@/lib/utils';
 import { NATIONALITIES, DEFAULT_NATIONALITY } from '@/config/nationalities';
 import { CURRENCIES, DEFAULT_CURRENCY } from '@/config/currencies';
+import { useTranslation } from '@/contexts/TranslationContext';
 
 interface MobileSearchBarProps {
   className?: string;
@@ -62,6 +63,7 @@ interface RoomGuests {
 
 const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchData, setSearchData] = useState({
     destination: '',
@@ -116,6 +118,16 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
   const [selectedCityData, setSelectedCityData] = useState<CitySearchResult | null>(null);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const destinationRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-typing animation state
+  const [autoTypingText, setAutoTypingText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Trending destinations - starting with Dubai
+  const trendingDestinations = ["Dubai", "New York", "Jeddah", "Riyadh", "Paris", "London"];
+  const [currentDestinationIndex, setCurrentDestinationIndex] = useState(0);
 
   // Room management functions
   const addRoom = () => {
@@ -402,7 +414,84 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
     if (allCities.length === 0) {
       loadAllCities();
     }
+    setHasUserInteracted(true);
+    setIsTyping(false);
+    setAutoTypingText("");
   };
+
+  // Auto-typing effect - only when no value and user hasn't interacted
+  useEffect(() => {
+    if (searchData.destination || searchInput || hasUserInteracted || isOpen) {
+      setIsTyping(false);
+      setAutoTypingText("");
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      return;
+    }
+
+    const deleteDestination = (dest: string) => {
+      let currentIndex = dest.length;
+      
+      const deleteChar = () => {
+        if (currentIndex > 0) {
+          setAutoTypingText(dest.slice(0, currentIndex - 1));
+          currentIndex--;
+          typingTimeoutRef.current = setTimeout(deleteChar, 50); // Faster deletion
+        } else {
+          // Move to next destination
+          setCurrentDestinationIndex((prev) => (prev + 1) % trendingDestinations.length);
+        }
+      };
+      
+      deleteChar();
+    };
+
+    const typeDestination = (dest: string) => {
+      let currentIndex = 0;
+      setAutoTypingText("");
+      
+      const typeChar = () => {
+        if (currentIndex < dest.length) {
+          setAutoTypingText(dest.slice(0, currentIndex + 1));
+          currentIndex++;
+          typingTimeoutRef.current = setTimeout(typeChar, 100); // Typing speed: 100ms per character
+        } else {
+          // Finished typing, wait then delete and move to next
+          typingTimeoutRef.current = setTimeout(() => {
+            deleteDestination(dest);
+          }, 2000); // Show for 2 seconds before deleting
+        }
+      };
+      
+      typeChar();
+    };
+
+    // Start auto-typing after a short delay
+    const startDelay = setTimeout(() => {
+      setIsTyping(true);
+      typeDestination(trendingDestinations[currentDestinationIndex]);
+    }, 1000);
+
+    return () => {
+      clearTimeout(startDelay);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchData.destination, searchInput, hasUserInteracted, isOpen, currentDestinationIndex]);
+
+  // Reset interaction state when sheet closes (if no destination selected)
+  useEffect(() => {
+    if (!isOpen && !searchData.destination && !searchInput) {
+      // Reset after a delay to allow smooth transition
+      const resetTimer = setTimeout(() => {
+        setHasUserInteracted(false);
+      }, 500);
+      return () => clearTimeout(resetTimer);
+    }
+  }, [isOpen, searchData.destination, searchInput]);
 
   const hasDestination = Boolean(searchData.destination);
   const showInputSearchIcon = searchInput.trim().length === 0;
@@ -420,7 +509,16 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
               {!hasDestination && <Search className="h-5 w-5 text-gray-600 flex-shrink-0" />}
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-gray-900 font-medium">
-                  {searchData.destination || 'Where are you going?'}
+                  {searchData.destination ? (
+                    searchData.destination
+                  ) : isTyping && autoTypingText ? (
+                    <span className="inline-flex items-center">
+                      {autoTypingText}
+                      <span className="inline-block w-0.5 h-3 bg-primary ml-1 animate-pulse" />
+                    </span>
+                  ) : (
+                    t?.whereAreYouGoing || 'Where are you going?'
+                  )}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
                   {searchData.checkIn && searchData.checkOut 
@@ -438,7 +536,7 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
                         };
                         return `${formatDateDDMMYY(searchData.checkIn)} • ${formatDateDDMMYY(searchData.checkOut)} • ${getGuestLabel()}`;
                       })()
-                    : 'Enter details'
+                    : (t?.enterDetails || 'Enter details')
                   }
                 </div>
               </div>
@@ -472,7 +570,7 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
               <div className="space-y-2" ref={destinationRef}>
                 <Label className="text-sm font-medium text-gray-700 flex items-center">
                   <MapPin className="h-4 w-4 mr-2" />
-                  Search City
+                  {t?.searchCity || "Search City"}
                 </Label>
                 
                 <div className="relative">
@@ -480,20 +578,31 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
                     {showInputSearchIcon && (
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     )}
-                    <Input
-                      type="text"
-                      value={searchInput}
-                      onChange={(e) => {
-                        setSearchInput(e.target.value);
-                        setShowResults(true);
-                      }}
-                      onFocus={handleDestinationFocus}
-                      placeholder="Search cities..."
-                      className={cn(
-                        "h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent",
-                        showInputSearchIcon ? "pl-10 pr-4" : "px-4"
+                    <div className="relative w-full">
+                      <Input
+                        type="text"
+                        value={searchInput}
+                        onChange={(e) => {
+                          setSearchInput(e.target.value);
+                          setShowResults(true);
+                          setHasUserInteracted(true);
+                          setIsTyping(false);
+                          setAutoTypingText("");
+                        }}
+                        onFocus={handleDestinationFocus}
+                        placeholder="Search cities..."
+                        className={cn(
+                          "h-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent",
+                          showInputSearchIcon ? "pl-10 pr-4" : "px-4"
+                        )}
+                      />
+                      {!searchInput && isTyping && autoTypingText && (
+                        <div className={`absolute top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 flex items-center ${showInputSearchIcon ? 'left-10' : 'left-4'}`}>
+                          {autoTypingText}
+                          <span className="inline-block w-0.5 h-4 bg-primary ml-1 animate-pulse" />
+                        </div>
                       )}
-                    />
+                    </div>
                     {isLoadingCities && (
                       <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
                     )}
@@ -540,7 +649,7 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700 flex items-center">
                   <Calendar className="h-4 w-4 mr-2" />
-                  Check in
+                  {t?.checkIn || "Check in"}
                 </Label>
                 <Input
                   type="date"
@@ -555,7 +664,7 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700 flex items-center">
                   <Calendar className="h-4 w-4 mr-2" />
-                  Check out
+                  {t?.checkOut || "Check out"}
                 </Label>
                 <Input
                   type="date"
@@ -571,7 +680,7 @@ const MobileSearchBar: React.FC<MobileSearchBarProps> = ({ className = "" }) => 
                 <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium text-gray-700 flex items-center">
                   <Users className="h-4 w-4 mr-2" />
-                    Guests & Rooms
+                    {t?.guestsRooms || "Guests & Rooms"}
                 </Label>
                   <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
                     {getGuestLabel()}

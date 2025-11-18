@@ -11,8 +11,10 @@ import { Loader2, Save, User, Phone, Mail, Globe, Calendar, UserCircle, ArrowLef
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useTranslation } from '../contexts/TranslationContext';
 
 export default function AccountSettings() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   
@@ -126,7 +128,7 @@ export default function AccountSettings() {
         <div className="container mx-auto px-4 max-w-4xl pt-24 pb-8">
           <Alert>
             <AlertDescription>
-              Please log in to access account settings.
+              {t?.pleaseLogIn || "Please log in to access account settings."}
             </AlertDescription>
           </Alert>
         </div>
@@ -147,17 +149,17 @@ export default function AccountSettings() {
           className="mb-4 hover:bg-muted"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          {t?.back || "Back"}
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserCircle className="h-6 w-6" />
-              Account Settings
+              {t?.accountSettings || "Account Settings"}
             </CardTitle>
             <CardDescription>
-              Update your personal information and profile details
+              {t?.updatePersonalInfo || "Update your personal information and profile details"}
             </CardDescription>
           </CardHeader>
         <CardContent>
@@ -166,7 +168,7 @@ export default function AccountSettings() {
             {updateSuccess && (
               <Alert className="bg-green-50 border-green-200">
                 <AlertDescription className="text-green-800">
-                  ✅ Profile updated successfully!
+                  ✅ {t?.profileUpdatedSuccessfully || "Profile updated successfully!"}
                 </AlertDescription>
               </Alert>
             )}
@@ -221,49 +223,49 @@ export default function AccountSettings() {
 
             {/* Editable Fields */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-muted-foreground">Personal Information</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground">{t?.personalInformation || "Personal Information"}</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* First Name */}
                 <div>
-                  <Label htmlFor="first_name">First Name *</Label>
+                  <Label htmlFor="first_name">{t?.firstName || "First Name"} *</Label>
                   <Input
                     id="first_name"
                     value={formData.first_name}
                     onChange={(e) => handleChange('first_name', e.target.value)}
-                    placeholder="Enter first name"
+                    placeholder={t?.enterFirstName || "Enter first name"}
                     required
                   />
                 </div>
 
                 {/* Last Name */}
                 <div>
-                  <Label htmlFor="last_name">Last Name *</Label>
+                  <Label htmlFor="last_name">{t?.lastName || "Last Name"} *</Label>
                   <Input
                     id="last_name"
                     value={formData.last_name}
                     onChange={(e) => handleChange('last_name', e.target.value)}
-                    placeholder="Enter last name"
+                    placeholder={t?.enterLastName || "Enter last name"}
                     required
                   />
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone">{t?.phoneNumber || "Phone Number"} *</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleChange('phone', e.target.value)}
-                    placeholder="Enter phone number"
+                    placeholder={t?.enterPhoneNumber || "Enter phone number"}
                     required
                   />
                 </div>
 
                 {/* Age */}
                 <div>
-                  <Label htmlFor="age">Age *</Label>
+                  <Label htmlFor="age">{t?.age || "Age"} *</Label>
                   <Input
                     id="age"
                     type="number"
@@ -271,32 +273,32 @@ export default function AccountSettings() {
                     max="120"
                     value={formData.age}
                     onChange={(e) => handleChange('age', e.target.value)}
-                    placeholder="Enter age"
+                    placeholder={t?.enterAge || "Enter age"}
                     required
                   />
                 </div>
 
                 {/* Nationality */}
                 <div>
-                  <Label htmlFor="nationality">Nationality *</Label>
+                  <Label htmlFor="nationality">{t?.nationality || "Nationality"} *</Label>
                   <Input
                     id="nationality"
                     value={formData.nationality}
                     onChange={(e) => handleChange('nationality', e.target.value)}
-                    placeholder="e.g., Indian, American"
+                    placeholder={t?.enterNationality || "Enter nationality"}
                     required
                   />
                 </div>
 
                 {/* Gender */}
                 <div>
-                  <Label htmlFor="gender">Gender *</Label>
+                  <Label htmlFor="gender">{t?.gender || "Gender"} *</Label>
                   <Select
                     value={formData.gender}
                     onValueChange={(value) => handleChange('gender', value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder={t?.selectGender || "Select gender"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Male">Male</SelectItem>
@@ -365,7 +367,7 @@ export default function AccountSettings() {
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    {t?.saveChanges || "Save Changes"}
                   </>
                 )}
               </Button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,60 +60,159 @@ interface RoomDetails {
   TotalTax?: string;
 }
 
+// Cache for room details to avoid redundant API calls
+const roomDetailsCache = new Map<string, { data: HotelRoomResponse; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const pendingRequests = new Map<string, Promise<any>>();
+
 const HotelRoomDetails: React.FC<HotelRoomDetailsProps> = ({ bookingCode, onClose, onRoomSelect, selectedRoom }) => {
   const [hotelData, setHotelData] = useState<HotelRoomResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [searchParams] = useSearchParams();
   
   // Get preferred currency from URL
   const preferredCurrency = searchParams.get("currency") || "AED";
+
+  // Check cache first
+  const getCachedData = useCallback((code: string): HotelRoomResponse | null => {
+    const cached = roomDetailsCache.get(code);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+    return null;
+  }, []);
 
   useEffect(() => {
     if (bookingCode) {
       fetchRoomDetails();
     }
     // eslint-disable-next-line
-  }, [bookingCode]);
+  }, [bookingCode, preferredCurrency]);
 
-  const fetchRoomDetails = async () => {
+  const fetchRoomDetails = useCallback(async () => {
+    if (!bookingCode) return;
+
+    // Check cache first
+    const cached = getCachedData(bookingCode);
+    if (cached) {
+      console.log('✅ Using cached room details');
+      setHotelData(cached);
+      setLoading(false);
+      
+      // Still check if translation is needed in background
+      const currentLanguage = localStorage.getItem("language") || "en";
+      if (currentLanguage !== "en") {
+        translateInBackground(cached, currentLanguage);
+      }
+      return;
+    }
+
+    // Check if request is already pending
+    if (pendingRequests.has(bookingCode)) {
+      console.log('⏳ Request already pending, waiting...');
+      try {
+        const response = await pendingRequests.get(bookingCode);
+        processRoomData(response);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch room details");
+        setLoading(false);
+      }
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    try {
-      const response = await getHotelRoomDetails(bookingCode);
+    
+    // Create and store the request promise
+    const requestPromise = getHotelRoomDetails(bookingCode);
+    pendingRequests.set(bookingCode, requestPromise);
 
-      if (response && response.HotelResult) {
-        // Convert room prices from USD to preferred currency
-        const hotelResult = response.HotelResult;
-        const sourceCurrency = hotelResult.Currency || "USD";
-        
-        if (sourceCurrency === "USD" && preferredCurrency !== "USD") {
-          console.log(`💱 Converting room prices from ${sourceCurrency} to ${preferredCurrency}`);
-          
-          // Convert each room's prices
-          const convertedRooms = hotelResult.Rooms.map((room: any) => 
-            convertRoomPrices(room, preferredCurrency)
-          );
-          
-          setHotelData({
-            ...hotelResult,
-            Currency: preferredCurrency,
-            Rooms: convertedRooms
-          });
-        } else {
-          setHotelData(hotelResult);
-        }
-      } else {
-        setError("No room details found");
-      }
+    try {
+      const response = await requestPromise;
+      pendingRequests.delete(bookingCode);
+      processRoomData(response);
     } catch (err) {
+      pendingRequests.delete(bookingCode);
       setError(
         err instanceof Error ? err.message : "Failed to fetch room details"
       );
-    } finally {
       setLoading(false);
     }
-  };
+  }, [bookingCode, preferredCurrency, getCachedData]);
+
+  const processRoomData = useCallback((response: any) => {
+    if (response && response.HotelResult) {
+      let hotelResult = response.HotelResult;
+      
+      // Get current language
+      const currentLanguage = localStorage.getItem("language") || "en";
+      
+      // Convert room prices synchronously (fast operation)
+      const sourceCurrency = hotelResult.Currency || "USD";
+      let processedRooms = hotelResult.Rooms || [];
+      let processedData = hotelResult;
+      
+      if (sourceCurrency === "USD" && preferredCurrency !== "USD") {
+        console.log(`💱 Converting room prices from ${sourceCurrency} to ${preferredCurrency}`);
+        // Convert all rooms synchronously (fast operation)
+        const convertedRooms = processedRooms.map((room: any) => 
+          convertRoomPrices(room, preferredCurrency)
+        );
+        
+        processedData = {
+          ...hotelResult,
+          Currency: preferredCurrency,
+          Rooms: convertedRooms
+        };
+      }
+      
+      // Cache the processed data immediately
+      roomDetailsCache.set(bookingCode!, { data: processedData, timestamp: Date.now() });
+      
+      // Show data immediately (optimistic update)
+      setHotelData(processedData);
+      setLoading(false);
+      
+      // Translate in background if needed (non-blocking - doesn't delay UI)
+      if (currentLanguage !== "en") {
+        // Use setTimeout to defer translation and not block UI
+        setTimeout(() => {
+          translateInBackground(processedData, currentLanguage);
+        }, 0);
+      }
+    } else {
+      setError("No room details found");
+      setLoading(false);
+    }
+  }, [bookingCode, preferredCurrency, translateInBackground]);
+
+  // Non-blocking translation in background
+  const translateInBackground = useCallback(async (data: HotelRoomResponse, language: string) => {
+    setIsTranslating(true);
+    try {
+      const { translateHotelData } = await import("@/services/apiTranslationService");
+      const translated = await translateHotelData(data, language);
+      
+      // Update cache with translated data
+      roomDetailsCache.set(bookingCode!, { data: translated, timestamp: Date.now() });
+      
+      // Update UI with translated data
+      setHotelData(translated);
+    } catch (err) {
+      console.error('Translation error:', err);
+      // Keep original data if translation fails
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [bookingCode]);
+
+  // Memoize room list to avoid re-renders
+  const roomList = useMemo(() => {
+    if (!hotelData?.Rooms) return [];
+    return hotelData.Rooms;
+  }, [hotelData?.Rooms]);
 
   const getAmenityIcon = (amenity: string) => {
     const iconProps = { className: "h-4 w-4" };
@@ -141,7 +240,7 @@ const HotelRoomDetails: React.FC<HotelRoomDetailsProps> = ({ bookingCode, onClos
     }
   };
 
-  if (loading) {
+  if (loading && !hotelData) {
     return (
       <div className="flex flex-col items-center justify-center p-8 min-h-[200px]">
         <div className="relative">
@@ -183,9 +282,14 @@ const HotelRoomDetails: React.FC<HotelRoomDetailsProps> = ({ bookingCode, onClos
     <div className="w-full space-y-6">
         {/* Room Options List */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Room Types & Meal Plans</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Room Types & Meal Plans</h3>
+            {isTranslating && (
+              <span className="text-xs text-muted-foreground">Translating...</span>
+            )}
+          </div>
           <div className="grid gap-4">
-            {hotelData.Rooms.map((room, index) => {
+            {roomList.map((room, index) => {
               const isSelected = selectedRoom?.BookingCode === room.BookingCode;
               return (
                 <div 

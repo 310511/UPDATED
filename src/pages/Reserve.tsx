@@ -12,8 +12,10 @@ import { prebookHotel } from "@/services/bookingapi";
 import { getHotelDetails, searchHotels } from "@/services/hotelApi";
 import { APP_CONFIG, getCurrentDate, getDateFromNow } from "@/config/constants";
 import { storeHotelAndRoom } from "@/services/hotelStorageApi";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Reserve = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -321,7 +323,7 @@ const Reserve = () => {
           className="mb-6 flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Hotel Details
+          {t?.backToHotel || "Back to Hotel Details"}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -411,9 +413,9 @@ const Reserve = () => {
                 {/* Guest Details Form - Organized by Room */}
                 <Card className="mt-6">
                   <CardHeader>
-                    <CardTitle>Guest Details</CardTitle>
+                    <CardTitle>{t?.guestDetails || "Guest Details"}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Please provide details for all guests in each room
+                      {t?.pleaseProvideGuestDetails || "Please provide details for all guests in each room"}
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -426,9 +428,9 @@ const Reserve = () => {
                               <User className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold text-primary">Room {room.roomNumber}</h3>
+                              <h3 className="text-xl font-bold text-primary">{t?.roomNumber || "Room"} {room.roomNumber}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {room.guests.filter(g => g.type === 'Adult').length} Adult(s), {room.guests.filter(g => g.type === 'Child').length} Child(ren)
+                                {room.guests.filter(g => g.type === 'Adult').length} {t?.adults || "Adult(s)"}, {room.guests.filter(g => g.type === 'Child').length} {t?.children || "Child(ren)"}
                               </p>
                             </div>
                           </div>
@@ -451,14 +453,14 @@ const Reserve = () => {
                                     <Users className="h-4 w-4" />
                                   )}
                                   <span>
-                                    {guest.type} {guestIndex + 1}
-                                    {guest.type === 'Child' && ` (Age: ${guest.age})`}
-                                    {roomIndex === 0 && guestIndex === 0 && " - Primary Guest"}
+                                    {guest.type === 'Adult' ? (t?.adult || "Adult") : (t?.child || "Child")} {guestIndex + 1}
+                                    {guest.type === 'Child' && ` (${t?.age || "Age"}: ${guest.age})`}
+                                    {roomIndex === 0 && guestIndex === 0 && ` - ${t?.primaryGuest || "Primary Guest"}`}
                                   </span>
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                   <div>
-                                    <Label htmlFor={`room-${roomIndex}-guest-${guestIndex}-title`}>Title</Label>
+                                    <Label htmlFor={`room-${roomIndex}-guest-${guestIndex}-title`}>{t?.title || "Title"}</Label>
                                     <select
                                       id={`room-${roomIndex}-guest-${guestIndex}-title`}
                                       value={guest.title}
@@ -477,7 +479,7 @@ const Reserve = () => {
                                     </select>
                                   </div>
                                   <div>
-                                    <Label htmlFor={`room-${roomIndex}-guest-${guestIndex}-firstName`}>First Name *</Label>
+                                    <Label htmlFor={`room-${roomIndex}-guest-${guestIndex}-firstName`}>{t?.firstName || "First Name"} *</Label>
                                     <Input
                                       id={`room-${roomIndex}-guest-${guestIndex}-firstName`}
                                       value={guest.firstName}
@@ -486,13 +488,13 @@ const Reserve = () => {
                                         newDetails[roomIndex].guests[guestIndex].firstName = e.target.value;
                                         setGuestDetails(newDetails);
                                       }}
-                                      placeholder="First name"
+                                      placeholder={t?.firstName || "First name"}
                                       required
                                       className="bg-white dark:bg-gray-800"
                                     />
                                   </div>
                                   <div>
-                                    <Label htmlFor={`room-${roomIndex}-guest-${guestIndex}-lastName`}>Last Name *</Label>
+                                    <Label htmlFor={`room-${roomIndex}-guest-${guestIndex}-lastName`}>{t?.lastName || "Last Name"} *</Label>
                                     <Input
                                       id={`room-${roomIndex}-guest-${guestIndex}-lastName`}
                                       value={guest.lastName}
@@ -501,7 +503,7 @@ const Reserve = () => {
                                         newDetails[roomIndex].guests[guestIndex].lastName = e.target.value;
                                         setGuestDetails(newDetails);
                                       }}
-                                      placeholder="Last name"
+                                      placeholder={t?.lastName || "Last name"}
                                       required
                                       className="bg-white dark:bg-gray-800"
                                     />
@@ -519,11 +521,11 @@ const Reserve = () => {
                 {/* Reserve Button Card */}
                 <Card className="mt-6">
                   <CardHeader>
-                    <CardTitle>Reserve Your Room</CardTitle>
+                    <CardTitle>{t?.reserveYourRoom || "Reserve Your Room"}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">
-                      Click the button below to reserve your room. This will hold your reservation for a limited time.
+                      {t?.reserveRoomDescription || "Click the button below to reserve your room. This will hold your reservation for a limited time."}
                     </p>
                     
                     {error && (
@@ -538,7 +540,7 @@ const Reserve = () => {
                       className="w-full"
                       size="lg"
                     >
-                      {prebookLoading ? "Processing..." : "Reserve Room"}
+                      {prebookLoading ? (t?.processing || "Processing...") : (t?.reserveRoom || "Reserve Room")}
                     </Button>
                   </CardContent>
                 </Card>
@@ -550,32 +552,32 @@ const Reserve = () => {
           <div className="lg:col-span-1">
             <Card className="sticky top-4">
               <CardHeader>
-                <CardTitle>Booking Summary</CardTitle>
+                <CardTitle>{t?.bookingSummary || "Booking Summary"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Hotel</span>
+                    <span className="text-muted-foreground">{t?.hotelName || "Hotel"}</span>
                     <span className="font-medium">{hotelDetails?.HotelName || "N/A"}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Check-in</span>
+                    <span className="text-muted-foreground">{t?.checkIn || "Check-in"}</span>
                     <span className="font-medium">{checkIn || "N/A"}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Check-out</span>
+                    <span className="text-muted-foreground">{t?.checkOut || "Check-out"}</span>
                     <span className="font-medium">{checkOut || "N/A"}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Guests</span>
+                    <span className="text-muted-foreground">{t?.guests || "Guests"}</span>
                     <span className="font-medium">{guests || "N/A"}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Rooms</span>
+                    <span className="text-muted-foreground">{t?.rooms || "Rooms"}</span>
                     <span className="font-medium">{rooms || "N/A"}</span>
                   </div>
                   
@@ -583,7 +585,7 @@ const Reserve = () => {
                     <>
                       <hr />
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Amount</span>
+                        <span className="text-muted-foreground">{t?.totalAmount || "Total Amount"}</span>
                         <span className="font-bold text-lg">
                           {prebookData.Currency} {prebookData.TotalAmount || "N/A"}
                         </span>

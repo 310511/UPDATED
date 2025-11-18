@@ -177,7 +177,7 @@ const AnimatedAvatar: React.FC<AnimatedAvatarProps> = ({
         position: 'fixed',
         left: position.x !== 0 ? `${position.x}px` : '2rem',
         top: position.y !== 0 ? `${position.y}px` : undefined,
-        bottom: position.y !== 0 ? 'auto' : '2rem',
+        bottom: position.y !== 0 ? 'auto' : (window.innerWidth <= 768 ? '5rem' : '2rem'), // Move up on mobile
         right: position.x !== 0 ? 'auto' : undefined,
         cursor: isDragging ? 'grabbing' : 'pointer',
         userSelect: 'none',

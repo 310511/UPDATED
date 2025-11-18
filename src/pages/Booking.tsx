@@ -13,8 +13,10 @@ import { createTelrOrder } from '@/services/telrPaymentApi';
 import { getCurrencySymbol, convertCurrency, EXCHANGE_RATES } from '@/services/currencyConverter';
 import { completeBooking } from '@/services/bookingService';
 import { addBookingToCustomBackend } from '@/services/bookingsApi';
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Booking = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -446,7 +448,7 @@ const Booking = () => {
           className="mb-6 flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Hotel Details
+          {t?.backToHotel || "Back to Hotel Details"}
         </Button>
 
         {/* Warning Message */}
@@ -681,17 +683,17 @@ const Booking = () => {
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-start gap-2">
-                    <span className="text-muted-foreground text-xs sm:text-sm">Hotel</span>
+                    <span className="text-muted-foreground text-xs sm:text-sm">{t?.hotelName || "Hotel"}</span>
                     <span className="font-medium text-xs sm:text-sm text-right">{hotelDetails?.HotelName || "N/A"}</span>
                   </div>
                   
                   <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground text-xs sm:text-sm">Check-in</span>
+                    <span className="text-muted-foreground text-xs sm:text-sm">{t?.checkIn || "Check-in"}</span>
                     <span className="font-medium text-xs sm:text-sm">{location.state?.checkIn || "N/A"}</span>
                   </div>
                   
                   <div className="flex justify-between gap-2">
-                    <span className="text-muted-foreground text-xs sm:text-sm">Check-out</span>
+                    <span className="text-muted-foreground text-xs sm:text-sm">{t?.checkOut || "Check-out"}</span>
                     <span className="font-medium text-xs sm:text-sm">{location.state?.checkOut || "N/A"}</span>
                   </div>
                   
@@ -707,7 +709,7 @@ const Booking = () => {
                   
                   <hr />
                   <div className="flex justify-between items-center gap-2">
-                    <span className="text-muted-foreground text-sm sm:text-base font-medium">Total Amount</span>
+                    <span className="text-muted-foreground text-sm sm:text-base font-medium">{t?.totalAmount || "Total Amount"}</span>
                     <span className="font-bold text-base sm:text-lg text-primary">
                       {getCurrencySymbol(prebookData.HotelResult?.Currency || 'AED')} {typeof prebookData.HotelResult?.Rooms?.TotalFare === 'number' ? prebookData.HotelResult?.Rooms?.TotalFare.toFixed(2) : parseFloat(prebookData.HotelResult?.Rooms?.TotalFare || 0).toFixed(2)}
                     </span>
@@ -774,7 +776,7 @@ const Booking = () => {
                           ) : (
                             <>
                               <Wallet className="mr-2 h-5 w-5" />
-                              Pay Later & Book Now
+                              {t?.payLater || "Pay Later"} & {t?.bookNow || "Book Now"}
                             </>
                           )}
                         </Button>

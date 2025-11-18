@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 interface Review {
   id: number;
@@ -164,15 +165,16 @@ const reviews: Review[] = [
 ];
 
 const ReviewsSection = () => {
+  const { t } = useTranslation();
   return (
     <section className="py-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-            What Our Guests Say
+            {t?.whatTravelersSay || "What Travelers Say"}
           </h2>
           <p className="text-muted-foreground text-lg">
-            Real experiences from travelers around the world
+            {t?.readReviews || "Read reviews from verified travelers"}
           </p>
         </div>
 

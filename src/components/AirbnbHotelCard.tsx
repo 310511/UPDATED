@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Heart, Star } from 'lucide-react';
 import { Hotel } from '@/data/hotels';
@@ -18,6 +18,8 @@ const AirbnbHotelCard = ({ hotel, onHover, isSelected, variant = 'list' }: Airbn
   const [searchParams] = useSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Safety check - if hotel is not an object, return null
   if (!hotel || typeof hotel !== 'object') {
@@ -101,18 +103,61 @@ const AirbnbHotelCard = ({ hotel, onHover, isSelected, variant = 'list' }: Airbn
     navigate(url);
   };
 
+  // Preload all images on mount
+  useEffect(() => {
+    const images = normalizedHotel.images;
+    const preloadImages = () => {
+      images.forEach((imageUrl, index) => {
+        const img = new Image();
+        img.onload = () => {
+          setLoadedImages((prev) => new Set([...prev, index]));
+        };
+        img.src = imageUrl;
+      });
+    };
+    preloadImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Preload adjacent images
+  useEffect(() => {
+    const images = normalizedHotel.images;
+    const preloadAdjacent = () => {
+      const prevIndex = currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1;
+      const nextIndex = currentImageIndex === images.length - 1 ? 0 : currentImageIndex + 1;
+      
+      [prevIndex, nextIndex].forEach((index) => {
+        if (!loadedImages.has(index) && images[index]) {
+          const img = new Image();
+          img.onload = () => {
+            setLoadedImages((prev) => new Set([...prev, index]));
+          };
+          img.src = images[index];
+        }
+      });
+    };
+    preloadAdjacent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentImageIndex]);
+
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     setCurrentImageIndex((prev) => 
       prev === 0 ? normalizedHotel.images.length - 1 : prev - 1
     );
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const handleNextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     setCurrentImageIndex((prev) => 
       prev === normalizedHotel.images.length - 1 ? 0 : prev + 1
     );
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const handleLike = (e: React.MouseEvent) => {
@@ -180,11 +225,25 @@ const AirbnbHotelCard = ({ hotel, onHover, isSelected, variant = 'list' }: Airbn
     >
       {/* Image Carousel */}
       <div className="relative aspect-square overflow-hidden">
-        <img 
-          src={normalizedHotel.images[currentImageIndex]} 
-          alt={normalizedHotel.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+        {/* Crossfade container */}
+        <div className="relative w-full h-full">
+          {normalizedHotel.images.map((imageUrl, index) => (
+            <img
+              key={index}
+              src={imageUrl}
+              alt={`${normalizedHotel.name} - Image ${index + 1}`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                index === currentImageIndex 
+                  ? 'opacity-100 z-10' 
+                  : 'opacity-0 z-0'
+              } ${!isTransitioning ? 'group-hover:scale-105 transition-transform duration-300' : ''}`}
+              style={{
+                transform: index === currentImageIndex && !isTransitioning ? 'scale(1)' : 'scale(1)',
+              }}
+              loading={index === 0 ? 'eager' : 'lazy'}
+            />
+          ))}
+        </div>
         
         {/* Navigation Buttons */}
         {normalizedHotel.images.length > 1 && (

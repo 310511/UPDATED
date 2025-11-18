@@ -24,6 +24,7 @@ const ChatBot = () => {
       const isSmallMobile = typeof window !== 'undefined' && window.innerWidth <= 480;
       const chatHeight = isMobile ? 420 : 480;
       const chatWidth = isMobile ? (isSmallMobile ? 300 : 320) : 360;
+      const buttonBottom = isMobile ? 80 : 20; // Move button up on mobile
 
       const script = document.createElement('script');
       script.type = 'module';
@@ -37,7 +38,7 @@ const ChatBot = () => {
             "button": {
               "backgroundColor": "#23665a",
               "left": 20,
-              "bottom": 20,
+              "bottom": ${buttonBottom},
               "size": 80,
               "iconColor": "#f5f4ef",
               "customIconSrc": "https://i.ibb.co/7bzcppC/pngwing-com-removebg-preview.png",

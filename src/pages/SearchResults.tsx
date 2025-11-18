@@ -33,9 +33,11 @@ import {
 } from "@/services/hotelCodeApi";
 import { APP_CONFIG, getCurrentDate, getDateFromNow } from "@/config/constants";
 import { convertHotelPrices, logConversion } from "@/services/currencyConverter";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const SearchResults = () => {
   console.log("🚀 SearchResults component rendering...");
+  const { t, language } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -449,10 +451,19 @@ const SearchResults = () => {
             return;
           }
           
+          // Translate API responses if language is not English
+          let processedHotels = searchResult;
+          const currentLanguage = localStorage.getItem("language") || "en";
+          if (currentLanguage !== "en") {
+            console.log(`🌐 Translating hotel data to ${currentLanguage}`);
+            const { translateHotelArray } = await import("@/services/apiTranslationService");
+            processedHotels = await translateHotelArray(searchResult, currentLanguage);
+          }
+          
           // Convert prices from USD to selected currency
           if (currency !== 'USD') {
             console.log(`💱 Converting hotel prices from USD to ${currency}`);
-            const convertedHotels = searchResult.map(hotel => {
+            const convertedHotels = processedHotels.map(hotel => {
               const converted = convertHotelPrices(hotel, currency);
               if (hotel.Price) {
                 logConversion(parseFloat(hotel.Price.toString()), currency);
@@ -464,7 +475,7 @@ const SearchResults = () => {
           } else {
             // Currency is USD, use hotels directly
             console.log("✅ Using hotels directly (USD)");
-            setHotels(searchResult);
+            setHotels(processedHotels);
           }
           
           // Reset loading state now that hotels are loaded
@@ -896,6 +907,22 @@ const SearchResults = () => {
     setCurrentPage(1);
   }, [selectedFilters, priceRange, viewMode]);
 
+  // Re-translate hotels when language changes
+  useEffect(() => {
+    if (hotels && hotels.length > 0) {
+      const currentLanguage = localStorage.getItem("language") || "en";
+      if (currentLanguage !== "en") {
+        const translateHotels = async () => {
+          const { translateHotelArray } = await import("@/services/apiTranslationService");
+          const translated = await translateHotelArray(hotels, currentLanguage);
+          setHotels(translated);
+        };
+        translateHotels();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
   // Debug logging for render
   console.log("🔍 Rendering SearchResults with:");
   console.log("🏨 Total hotels:", hotels?.length || 0);
@@ -970,7 +997,7 @@ const SearchResults = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className="h-8"
               >
-                {showFilters ? "Hide Filters" : "Show Filters"}
+                {showFilters ? (t?.close || "Hide Filters") : (t?.filters || "Show Filters")}
               </Button>
               <Button
                 variant={viewMode === "list" ? "default" : "outline"}
@@ -979,7 +1006,7 @@ const SearchResults = () => {
                 className="h-8"
               >
                 <Grid3X3 className="h-4 w-4 mr-2" />
-                List
+                {t?.filters || "List"}
               </Button>
               <Button
                 variant={viewMode === "map" ? "default" : "outline"}
@@ -988,7 +1015,7 @@ const SearchResults = () => {
                 className="h-8"
               >
                 <MapIcon className="h-4 w-4 mr-2" />
-                Map
+                {t?.distance || "Map"}
               </Button>
             </div>
           </div>
@@ -1015,7 +1042,7 @@ const SearchResults = () => {
                   <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                     <h3 className="font-bold text-lg mb-6 flex items-center">
                       <div className="w-2 h-6 bg-gradient-to-b from-primary to-primary/60 rounded-full mr-3"></div>
-                      Price range
+                      {t?.filters || "Price range"}
                     </h3>
                     <div className="space-y-6">
                       <Slider
@@ -1500,10 +1527,10 @@ const SearchResults = () => {
                     {loading ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Searching...
+                        {t?.loading || "Searching..."}
                       </span>
                     ) : (
-                      `${filteredHotels.length} properties found`
+                      `${filteredHotels.length} ${t?.hotelsFound || "properties found"}`
                     )}
                   </p>
                 </div>
@@ -1516,13 +1543,13 @@ const SearchResults = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <span className="text-lg font-medium">
                       {isSearching
-                        ? "Fetching hotels ..."
-                        : "Finding the best hotels for you..."}
+                        ? (t?.loading || "Fetching hotels ...")
+                        : (t?.loading || "Finding the best hotels for you...")}
                     </span>
                     <p className="text-sm text-muted-foreground text-center max-w-md">
                       {isSearching
-                        ? "Please wait while we fetch hotel data from our partners"
-                        : "Please wait while we search for available accommodations"}
+                        ? (t?.loading || "Please wait while we fetch hotel data from our partners")
+                        : (t?.loading || "Please wait while we search for available accommodations")}
                     </p>
                   </div>
                 </div>
@@ -1547,10 +1574,10 @@ const SearchResults = () => {
                     <div className="text-center">
                       <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-foreground mb-2">
-                        No hotels found
+                        {t?.noHotelsFound || "No hotels found"}
                       </h3>
                       <p className="text-muted-foreground">
-                        Try adjusting your filters or search criteria.
+                        {t?.tryDifferentSearch || "Try adjusting your filters or search criteria."}
                       </p>
                     </div>
                   </div>

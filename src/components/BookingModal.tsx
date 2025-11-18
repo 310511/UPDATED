@@ -12,7 +12,6 @@ import {
   User, 
   Mail, 
   Lock, 
-  Phone, 
   Calendar, 
   Users, 
   CreditCard,
@@ -424,9 +423,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
         });
         
         if (existingBookingRef) {
-          setSuccessMessage(`Welcome, ${signupForm.firstName}! Your account has been created and booking reference is: ${existingBookingRef}`);
+          setSuccessMessage(`Welcome "${signupForm.firstName}", your account has been created successfully with HotelRBS. Book seamless hotels worldwide with us. Thank you.`);
         } else {
-          setSuccessMessage(`Welcome, ${signupForm.firstName}! Your account has been created. Please fill in the guest details.`);
+          setSuccessMessage(`Welcome "${signupForm.firstName}", your account has been created successfully with HotelRBS. Book seamless hotels worldwide with us. Thank you.`);
         }
         
         // Store token for future use
@@ -771,12 +770,11 @@ const BookingModal: React.FC<BookingModalProps> = ({
                     onValueChange={setCountryCode}
                   />
                   <div className="relative flex-1">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
                     <Input
                       id="signup-phone"
                       type="tel"
                       placeholder="Enter your phone number"
-                      className="pl-10 rounded-l-none border-l-0"
+                      className="px-3 rounded-l-none border-l-0"
                       value={signupForm.phone}
                       onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })}
                       required

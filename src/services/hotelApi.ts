@@ -224,9 +224,14 @@ const searchHotelsTravzilla = async (
 //   }
 // };
 
-export const getHotelDetails = async (hotelCode: string): Promise<any> => {
+export const getHotelDetails = async (hotelCode: string, language?: string): Promise<any> => {
   try {
     console.log("🔍 Fetching hotel details for:", hotelCode);
+    
+    // Get language from parameter or localStorage
+    const lang = language || localStorage.getItem("language") || "en";
+    // Map language code for API (ar, en, fr)
+    const apiLang = lang === "ar" ? "ar" : lang === "fr" ? "fr" : "en";
 
     const response = await fetch(`${PROXY_SERVER_URL}/hotel-details`, {
       method: "POST",
@@ -234,7 +239,7 @@ export const getHotelDetails = async (hotelCode: string): Promise<any> => {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ Hotelcodes: Number(hotelCode), Language: "en" }),
+      body: JSON.stringify({ Hotelcodes: Number(hotelCode), Language: apiLang }),
     });
 
     if (!response.ok) {
@@ -293,29 +298,45 @@ export const getRoomAvailability = async (
   }
 };
 
-// Get hotel room details using booking code
-export const getHotelRoomDetails = async (bookingCode) => {
+// Get hotel room details using booking code with timeout and optimization
+export const getHotelRoomDetails = async (bookingCode, timeout = 15000) => {
   try {
     console.log('🔍 Getting room details for booking code:', bookingCode);
     
-    const response = await fetch(`${PROXY_SERVER_URL}/hotel-room`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({ BookingCode: bookingCode }),
-    });
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const response = await fetch(`${PROXY_SERVER_URL}/hotel-room`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ BookingCode: bookingCode }),
+        signal: controller.signal, // Add abort signal for timeout
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Room details error:', errorText);
-      throw new Error(`Room details error: ${response.status} ${response.statusText}`);
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Room details error:', errorText);
+        throw new Error(`Room details error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Room details response:', data);
+      return data;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timeout: Room details took too long to load');
+      }
+      throw fetchError;
     }
-
-    const data = await response.json();
-    console.log('✅ Room details response:', data);
-    return data;
   } catch (error) {
     console.error('💥 Room details error:', error);
     throw error;

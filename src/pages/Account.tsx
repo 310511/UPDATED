@@ -17,8 +17,10 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Account = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
@@ -138,7 +140,7 @@ const Account = () => {
                     className="flex items-center space-x-2"
                   >
                     <UserIcon className="h-4 w-4" />
-                    <span>Edit Profile</span>
+                    <span>{t?.editProfile || "Edit Profile"}</span>
                   </Button>
                 </div>
 

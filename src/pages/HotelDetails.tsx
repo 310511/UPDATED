@@ -45,8 +45,10 @@ import { addToWishlist, isHotelInWishlist, removeFromWishlist } from "@/services
 import { useAuth } from "@/hooks/useAuth";
 import { hotels as localHotels } from "@/data/hotels";
 import { getCurrencySymbol, convertHotelPrices } from "@/services/currencyConverter";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const HotelDetails = () => {
+  const { t, language } = useTranslation();
   const { id } = useParams();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -61,6 +63,8 @@ const HotelDetails = () => {
   const [hotelDetails, setHotelDetails] = useState<any>(null);
   const [hotelCoordinates, setHotelCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setIsLoading] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
   const [selectedBookingCode, setSelectedBookingCode] = useState<string | null>(null);
   const [prebookLoading, setPrebookLoading] = useState(false);
@@ -331,8 +335,17 @@ const HotelDetails = () => {
       // Get preferred currency from URL
       const currency = urlSearchParams.get("currency") || "AED";
       
-      const response = await getHotelDetails(hotelCode);
+      // Get current language
+      const currentLanguage = localStorage.getItem("language") || "en";
+      
+      const response = await getHotelDetails(hotelCode, currentLanguage);
       let hotelDetailsData = response.HotelDetails;
+      
+      // Translate API response if language is not English
+      if (currentLanguage !== "en" && hotelDetailsData) {
+        const { translateHotelData } = await import("@/services/apiTranslationService");
+        hotelDetailsData = await translateHotelData(hotelDetailsData, currentLanguage);
+      }
       
       // Convert prices from USD to preferred currency
       if (hotelDetailsData && hotelDetailsData.Currency === "USD" && currency !== "USD") {
@@ -957,6 +970,59 @@ const HotelDetails = () => {
     }
   }, [id, urlSearchParams, user]);
 
+  // Re-translate hotel details when language changes
+  useEffect(() => {
+    if (hotelDetails && !hotelDetails._isLocalData) {
+      const currentLanguage = localStorage.getItem("language") || "en";
+      if (currentLanguage !== "en") {
+        const translateHotel = async () => {
+          const { translateHotelData } = await import("@/services/apiTranslationService");
+          const translated = await translateHotelData(hotelDetails, currentLanguage);
+          setHotelDetails(translated);
+        };
+        translateHotel();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
+  // Preload hotel images when hotelDetails changes
+  useEffect(() => {
+    if (hotelDetails?.Images && Array.isArray(hotelDetails.Images)) {
+      const preloadImages = () => {
+        hotelDetails.Images.forEach((imageUrl: string, index: number) => {
+          const img = new Image();
+          img.onload = () => {
+            setLoadedImages((prev) => new Set([...prev, index]));
+          };
+          img.src = imageUrl;
+        });
+      };
+      preloadImages();
+    }
+  }, [hotelDetails?.Images]);
+
+  // Preload adjacent images
+  useEffect(() => {
+    if (hotelDetails?.Images && Array.isArray(hotelDetails.Images)) {
+      const preloadAdjacent = () => {
+        const prevIndex = currentImageIndex === 0 ? hotelDetails.Images.length - 1 : currentImageIndex - 1;
+        const nextIndex = currentImageIndex === hotelDetails.Images.length - 1 ? 0 : currentImageIndex + 1;
+        
+        [prevIndex, nextIndex].forEach((index: number) => {
+          if (!loadedImages.has(index) && hotelDetails.Images[index]) {
+            const img = new Image();
+            img.onload = () => {
+              setLoadedImages((prev) => new Set([...prev, index]));
+            };
+            img.src = hotelDetails.Images[index];
+          }
+        });
+      };
+      preloadAdjacent();
+    }
+  }, [currentImageIndex, hotelDetails?.Images, loadedImages]);
+
   if (loading) {
     return <Loader />;
   }
@@ -1060,7 +1126,7 @@ const HotelDetails = () => {
           <Link to="/search">
             <Button variant="ghost" className="flex items-center space-x-2">
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to search</span>
+              <span>{t?.back || "Back"} {t?.search || "to search"}</span>
             </Button>
           </Link>
         </div>
@@ -1069,32 +1135,57 @@ const HotelDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="space-y-4">
             <div className="aspect-[4/3] relative overflow-hidden rounded-xl group">
-              <img
-                src={
-                  hotelDetails.Images?.[currentImageIndex] || 
-                  hotelDetails.FrontImage || 
-                  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop"
-                }
-                alt={`${hotelDetails.HotelName} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover transition-transform duration-300"
-              />
+              {/* Crossfade container */}
+              <div className="relative w-full h-full">
+                {hotelDetails.Images && hotelDetails.Images.length > 0 ? (
+                  hotelDetails.Images.map((imageUrl: string, index: number) => (
+                    <img
+                      key={index}
+                      src={imageUrl}
+                      alt={`${hotelDetails.HotelName} - Image ${index + 1}`}
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                        index === currentImageIndex 
+                          ? 'opacity-100 z-10' 
+                          : 'opacity-0 z-0'
+                      }`}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                    />
+                  ))
+                ) : (
+                  <img
+                    src={hotelDetails.FrontImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop"}
+                    alt={hotelDetails.HotelName}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
               
               {/* Image Navigation Arrows */}
               {hotelDetails.Images && hotelDetails.Images.length > 1 && (
                 <>
                   <button
-                    onClick={() => setCurrentImageIndex((prev) => 
-                      prev === 0 ? hotelDetails.Images.length - 1 : prev - 1
-                    )}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      if (isTransitioning) return;
+                      setIsTransitioning(true);
+                      setCurrentImageIndex((prev) => 
+                        prev === 0 ? hotelDetails.Images.length - 1 : prev - 1
+                      );
+                      setTimeout(() => setIsTransitioning(false), 300);
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20"
                   >
                     <ArrowLeft className="h-5 w-5 text-gray-800" />
                   </button>
                   <button
-                    onClick={() => setCurrentImageIndex((prev) => 
-                      prev === hotelDetails.Images.length - 1 ? 0 : prev + 1
-                    )}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      if (isTransitioning) return;
+                      setIsTransitioning(true);
+                      setCurrentImageIndex((prev) => 
+                        prev === hotelDetails.Images.length - 1 ? 0 : prev + 1
+                      );
+                      setTimeout(() => setIsTransitioning(false), 300);
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20"
                   >
                     <ArrowLeft className="h-5 w-5 text-gray-800 rotate-180" />
                   </button>
@@ -1105,11 +1196,16 @@ const HotelDetails = () => {
                   </div>
                   
                   {/* Dot Indicators */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                     {hotelDetails.Images.slice(0, 5).map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => setCurrentImageIndex(index)}
+                        onClick={() => {
+                          if (isTransitioning) return;
+                          setIsTransitioning(true);
+                          setCurrentImageIndex(index);
+                          setTimeout(() => setIsTransitioning(false), 300);
+                        }}
                         className={`w-2 h-2 rounded-full transition-all ${
                           index === currentImageIndex 
                             ? 'bg-white w-6' 
@@ -1198,6 +1294,126 @@ const HotelDetails = () => {
                 </div>
               </div>
 
+              {/* Key Amenities & Highlights Section - Prominent Display */}
+              {hotelDetails.HotelFacilities && hotelDetails.HotelFacilities.length > 0 && (
+                <div className="mt-8 space-y-6">
+                  {/* Key Amenities - Most Important */}
+                  <Card className="border-2 border-primary/20 shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Star className="h-5 w-5 text-primary fill-primary" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-foreground">
+                          {t?.keyAmenities || "Key Amenities"}
+                        </h2>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t?.keyAmenitiesDescription || "Essential features that make your stay comfortable and memorable"}
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {hotelDetails.HotelFacilities.slice(0, 8).map((amenity: string, index: number) => (
+                          <div
+                            key={`key-amenity-${index}`}
+                            className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/40 hover:shadow-md transition-all duration-200 group"
+                          >
+                            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                              {getAmenityIcon(amenity)}
+                            </div>
+                            <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {amenity}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Highlighted Facilities - Premium Features */}
+                  {hotelDetails.HotelFacilities.length > 8 && (
+                    <Card className="border-2 border-blue-200 shadow-lg bg-gradient-to-br from-blue-50/50 to-white">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Waves className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <h2 className="text-2xl font-bold text-foreground">
+                            {t?.highlightedFacilities || "Highlighted Facilities"}
+                          </h2>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {t?.highlightedFacilitiesDescription || "Premium features and services that set this property apart"}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {hotelDetails.HotelFacilities.slice(8, 16).map((facility: string, index: number) => (
+                            <Badge
+                              key={`facility-${index}`}
+                              variant="outline"
+                              className="px-4 py-2 text-sm font-semibold border-blue-300 bg-blue-50/50 hover:bg-blue-100 hover:border-blue-400 transition-all cursor-default"
+                            >
+                              <div className="flex items-center gap-2">
+                                {getAmenityIcon(facility)}
+                                <span>{facility}</span>
+                              </div>
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Unique Offerings - What Makes This Hotel Special */}
+                  <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50/50 to-white">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-amber-100 rounded-lg">
+                          <Star className="h-5 w-5 text-amber-600 fill-amber-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-foreground">
+                          {t?.uniqueOfferings || "Unique Offerings"}
+                        </h2>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {t?.uniqueOfferingsDescription || "Special features and experiences that make this hotel/resort stand out"}
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(() => {
+                          // Identify unique offerings based on keywords
+                          const uniqueKeywords = ['spa', 'pool', 'beach', 'gym', 'restaurant', 'bar', 'concierge', 'room service', 'business center', 'parking', 'wifi', 'breakfast'];
+                          const uniqueOfferings = hotelDetails.HotelFacilities.filter((facility: string) => 
+                            uniqueKeywords.some(keyword => facility.toLowerCase().includes(keyword))
+                          ).slice(0, 6);
+                          
+                          return uniqueOfferings.map((offering: string, index: number) => (
+                            <div
+                              key={`offering-${index}`}
+                              className="flex items-start gap-3 p-4 rounded-lg bg-white border border-amber-200 hover:border-amber-400 hover:shadow-lg transition-all group"
+                            >
+                              <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
+                                {getAmenityIcon(offering)}
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-foreground mb-1 group-hover:text-amber-700 transition-colors">
+                                  {offering}
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  {offering.toLowerCase().includes('spa') && t?.spaDescription || 
+                                   offering.toLowerCase().includes('pool') && t?.poolDescription ||
+                                   offering.toLowerCase().includes('gym') && t?.gymDescription ||
+                                   offering.toLowerCase().includes('restaurant') && t?.restaurantDescription ||
+                                   offering.toLowerCase().includes('wifi') && t?.wifiDescription ||
+                                   t?.premiumFeatureDescription || "Premium feature available"}
+                                </p>
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {/* Available Rooms Section - Only show for API hotels */}
               {!hotelDetails._isLocalData && (
                 <div id="available-rooms-section" className="mt-8">
@@ -1222,7 +1438,7 @@ const HotelDetails = () => {
                             <div className="text-lg font-bold text-primary">
                               {getCurrencySymbol(selectedRoom.Currency || hotelDetails.Currency || 'AED')} {typeof selectedRoom.TotalFare === 'number' ? selectedRoom.TotalFare.toFixed(2) : parseFloat(selectedRoom.TotalFare).toFixed(2)}
                             </div>
-                            <div className="text-sm text-muted-foreground">total</div>
+                            <div className="text-sm text-muted-foreground">{t?.totalPrice || "total"}</div>
                           </div>
                         </div>
                       </div>
@@ -1255,13 +1471,13 @@ const HotelDetails = () => {
                     {showRoomDetails && selectedBookingCode && (
                       <div className="border rounded-lg bg-muted/5">
                         <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-background z-10">
-                          <h4 className="font-semibold text-lg">Select Your Room</h4>
+                          <h4 className="font-semibold text-lg">{t?.selectRoom || "Select Your Room"}</h4>
                           <Button 
                             onClick={handleCloseRoomDetails}
                             variant="ghost"
                             size="sm"
                           >
-                            Close
+                            {t?.close || "Close"}
                           </Button>
                         </div>
                         <div className="max-h-[500px] overflow-y-auto p-4">
@@ -1318,7 +1534,7 @@ const HotelDetails = () => {
                     ) : !bookingCode ? (
                       "Loading booking options..."
                     ) : (
-                      "Reserve"
+                      t?.reserveNow || "Reserve"
                     )}
                   </Button>
                 )}
@@ -1424,7 +1640,7 @@ const HotelDetails = () => {
                             ) : (
                               <ChevronDown className="h-5 w-5 text-gray-500" />
                             )}
-                            <h4 className="font-semibold text-foreground">Amenities</h4>
+                            <h4 className="font-semibold text-foreground">{t?.amenities || "Amenities"}</h4>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="pt-2 px-3 pb-3">
                             <div 
@@ -1487,7 +1703,7 @@ const HotelDetails = () => {
                             ) : (
                               <ChevronDown className="h-5 w-5 text-gray-500" />
                             )}
-                            <h4 className="font-semibold text-foreground">Rooms</h4>
+                            <h4 className="font-semibold text-foreground">{t?.rooms || "Rooms"}</h4>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="pt-2 px-3 pb-3">
                             <div 

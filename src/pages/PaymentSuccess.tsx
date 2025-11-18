@@ -8,8 +8,10 @@ import Footer from '@/components/Footer';
 import { checkTelrOrderStatus } from '@/services/telrPaymentApi';
 import { completeBooking } from '@/services/bookingService';
 import { addBookingToCustomBackend } from '@/services/bookingsApi';
+import { useTranslation } from '@/contexts/TranslationContext';
 
 const PaymentSuccess = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -324,7 +326,7 @@ const PaymentSuccess = () => {
               <CheckCircle className={`h-20 w-20 ${isPayLater ? 'text-blue-600' : 'text-green-600'}`} />
             </div>
             <CardTitle className={`text-center text-3xl ${isPayLater ? 'text-blue-700' : 'text-green-700'}`}>
-              {isPayLater ? 'Booking Confirmed!' : 'Payment Successful!'}
+              {isPayLater ? (t?.bookingConfirmed || 'Booking Confirmed!') : (t?.paymentSuccessful || 'Payment Successful!')}
             </CardTitle>
           </CardHeader>
           
@@ -332,8 +334,8 @@ const PaymentSuccess = () => {
             <div className="text-center">
               <p className={`text-lg ${isPayLater ? 'text-blue-800' : 'text-green-800'}`}>
                 {isPayLater 
-                  ? 'Payment is yet to be done and booking is placed. Your booking has been confirmed successfully!'
-                  : 'Thank you for your payment. Your booking is now confirmed!'
+                  ? (t?.paymentPending || 'Payment is yet to be done and booking is placed. Your booking has been confirmed successfully!')
+                  : (t?.thankYouPayment || 'Thank you for your payment. Your booking is now confirmed!')
                 }
               </p>
             </div>

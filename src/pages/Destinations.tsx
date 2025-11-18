@@ -3,12 +3,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
 import TravelerCommunity from "@/components/TravelerCommunity";
+import { useTranslation } from "@/contexts/TranslationContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users, Camera, Sparkles, TrendingUp, Star, Award } from "lucide-react";
 
 const Destinations = () => {
+  const { t } = useTranslation();
   const destinations = [
     {
       id: 1,
@@ -170,29 +172,29 @@ const Destinations = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 text-center">
           <Badge className="mb-6 bg-white/90 text-primary border-white/20 px-4 py-2">
             <Sparkles className="w-4 h-4 mr-2 inline" />
-            Explore Amazing Destinations
+            {t?.exploreAmazingDestinations || "Explore Amazing Destinations"}
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-white mb-6">
-            Discover Your Next
+            {t?.discoverYourNext || "Discover Your Next"}
             <span className="block bg-gradient-to-r from-yellow-200 to-white bg-clip-text text-transparent">
-              Adventure
+              {t?.adventure || "Adventure"}
             </span>
           </h1>
           <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8">
-            From bustling cities to serene beaches, explore {destinations.length}+ incredible destinations across the Middle East
+            {t?.fromBustlingCities || "From bustling cities to serene beaches, explore"} {destinations.length}+ {t?.incredibleDestinations || "incredible destinations across the Middle East"}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white">
               <MapPin className="w-5 h-5" />
-              <span className="font-semibold">{destinations.length} Cities</span>
+              <span className="font-semibold">{destinations.length} {t?.cities || "Cities"}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white">
               <Users className="w-5 h-5" />
-              <span className="font-semibold">2,500+ Hotels</span>
+              <span className="font-semibold">2,500+ {t?.hotels || "Hotels"}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white">
               <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              <span className="font-semibold">4.7 Avg Rating</span>
+              <span className="font-semibold">4.7 {t?.avgRating || "Avg Rating"}</span>
             </div>
           </div>
         </div>
@@ -204,10 +206,10 @@ const Destinations = () => {
           <div className="max-w-7xl mx-auto px-6 lg:px-12">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-                Popular Destinations
+                {t?.popularDestinations || "Popular Destinations"}
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Hand-picked destinations offering the best accommodations and experiences
+                {t?.handPickedDestinations || "Hand-picked destinations offering the best accommodations and experiences"}
               </p>
             </div>
 
@@ -259,7 +261,7 @@ const Destinations = () => {
                       
                       <div className="space-y-3">
                         <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">
-                          Top Attractions
+                          {t?.topAttractions || "Top Attractions"}
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {destination.highlights.map((highlight, idx) => (
@@ -275,7 +277,7 @@ const Destinations = () => {
                       </div>
                       
                       <Button className="w-full mt-6 bg-primary hover:bg-primary-hover text-white shadow-md hover:shadow-lg transition-all duration-300">
-                        Explore Hotels
+                        {t?.exploreHotels || "Explore Hotels"}
                       </Button>
                     </CardContent>
                   </Card>
@@ -290,10 +292,10 @@ const Destinations = () => {
           <div className="max-w-7xl mx-auto px-6 lg:px-12">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-                Why Book With Us
+                {t?.whyBookWithUs || "Why Book With Us"}
               </h2>
               <p className="text-lg text-muted-foreground">
-                Discover the benefits of choosing HotelRBS for your travels
+                {t?.discoverBenefits || "Discover the benefits of choosing HotelRBS for your travels"}
               </p>
             </div>
 
@@ -303,9 +305,9 @@ const Destinations = () => {
                   <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                     <TrendingUp className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Best Prices</h3>
+                  <h3 className="text-xl font-bold mb-3">{t?.bestPrices || "Best Prices"}</h3>
                   <p className="text-muted-foreground">
-                    Compare prices across 2,500+ hotels and get the best deals guaranteed
+                    {t?.comparePrices || "Compare prices across 2,500+ hotels and get the best deals guaranteed"}
                   </p>
                 </CardContent>
               </Card>
@@ -315,9 +317,9 @@ const Destinations = () => {
                   <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                     <Award className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Verified Reviews</h3>
+                  <h3 className="text-xl font-bold mb-3">{t?.verifiedReviews || "Verified Reviews"}</h3>
                   <p className="text-muted-foreground">
-                    Read authentic reviews from real travelers who stayed there
+                    {t?.readAuthenticReviews || "Read authentic reviews from real travelers who stayed there"}
                   </p>
                 </CardContent>
               </Card>
@@ -327,9 +329,9 @@ const Destinations = () => {
                   <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                     <MapPin className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Local Expertise</h3>
+                  <h3 className="text-xl font-bold mb-3">{t?.localExpertise || "Local Expertise"}</h3>
                   <p className="text-muted-foreground">
-                    Get insider tips and recommendations for each destination
+                    {t?.getInsiderTips || "Get insider tips and recommendations for each destination"}
                   </p>
                 </CardContent>
               </Card>
@@ -352,13 +354,13 @@ const Destinations = () => {
                 <div className="relative z-10">
                   <Camera className="h-16 w-16 text-primary mx-auto mb-6" />
                   <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-                    Can't Find Your Destination?
+                    {t?.cantFindDestination || "Can't Find Your Destination?"}
                   </h2>
                   <p className="text-muted-foreground mb-8 text-lg max-w-2xl mx-auto">
                     We're constantly adding new destinations. Let us know where you'd like to stay, and we'll help you find the perfect accommodation.
                   </p>
                   <Button size="lg" className="bg-primary hover:bg-primary-hover text-white shadow-lg hover:shadow-xl transition-all duration-300 h-14 px-8 text-lg">
-                    Request New Destination
+                    {t?.requestNewDestination || "Request New Destination"}
                   </Button>
                 </div>
               </CardContent>

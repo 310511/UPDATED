@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,16 +32,56 @@ interface HotelCardProps {
 const HotelCard = ({ hotel, onFavoriteToggle, isFavorite, animationDelay = 0 }: HotelCardProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Preload all images on mount
+  useEffect(() => {
+    const preloadImages = () => {
+      hotel.images.forEach((imageUrl, index) => {
+        const img = new Image();
+        img.onload = () => {
+          setLoadedImages((prev) => new Set([...prev, index]));
+        };
+        img.src = imageUrl;
+      });
+    };
+    preloadImages();
+  }, [hotel.images]);
+
+  // Preload adjacent images
+  useEffect(() => {
+    const preloadAdjacent = () => {
+      const prevIndex = currentImageIndex === 0 ? hotel.images.length - 1 : currentImageIndex - 1;
+      const nextIndex = currentImageIndex === hotel.images.length - 1 ? 0 : currentImageIndex + 1;
+      
+      [prevIndex, nextIndex].forEach((index) => {
+        if (!loadedImages.has(index) && hotel.images[index]) {
+          const img = new Image();
+          img.onload = () => {
+            setLoadedImages((prev) => new Set([...prev, index]));
+          };
+          img.src = hotel.images[index];
+        }
+      });
+    };
+    preloadAdjacent();
+  }, [currentImageIndex, hotel.images, loadedImages]);
 
   const handleImageNavigation = (direction: 'next' | 'prev', e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     
     if (direction === 'next') {
       setCurrentImageIndex((prev) => (prev + 1) % hotel.images.length);
     } else {
       setCurrentImageIndex((prev) => (prev - 1 + hotel.images.length) % hotel.images.length);
     }
+    
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const getAmenityIcon = (amenity: string) => {
@@ -72,15 +112,25 @@ const HotelCard = ({ hotel, onFavoriteToggle, isFavorite, animationDelay = 0 }: 
       <CardContent className="p-0">
         {/* Image Carousel */}
         <div className="relative aspect-[4/3] overflow-hidden">
-          {/* Hotel Images */}
-          <img 
-            src={hotel.images[currentImageIndex]} 
-            alt={hotel.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
-              e.currentTarget.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop';
-            }}
-          />
+          {/* Crossfade container */}
+          <div className="relative w-full h-full">
+            {hotel.images.map((imageUrl, index) => (
+              <img
+                key={index}
+                src={imageUrl}
+                alt={`${hotel.name} - Image ${index + 1}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                  index === currentImageIndex 
+                    ? 'opacity-100 z-10' 
+                    : 'opacity-0 z-0'
+                } ${!isTransitioning ? 'group-hover:scale-105 transition-transform duration-300' : ''}`}
+                onError={(e) => {
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop';
+                }}
+                loading={index === 0 ? 'eager' : 'lazy'}
+              />
+            ))}
+          </div>
 
           {/* Image Navigation Dots */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1">
@@ -94,7 +144,10 @@ const HotelCard = ({ hotel, onFavoriteToggle, isFavorite, animationDelay = 0 }: 
                 }`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (isTransitioning) return;
+                  setIsTransitioning(true);
                   setCurrentImageIndex(index);
+                  setTimeout(() => setIsTransitioning(false), 300);
                 }}
               />
             ))}

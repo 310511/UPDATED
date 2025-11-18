@@ -17,8 +17,10 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Profile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
@@ -244,12 +246,12 @@ const Profile = () => {
           paddingTop: "calc(var(--header-height-default) + 31px + 14px)",
         }}
       >
-        <h1 className="text-3xl font-bold mb-8">Your Bookings</h1>
+        <h1 className="text-3xl font-bold mb-8">{t?.myBookings || "Your Bookings"}</h1>
 
         <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Your Bookings</CardTitle>
+                  <CardTitle>{t?.myBookings || "Your Bookings"}</CardTitle>
                   <Button 
                     onClick={fetchSampleBookingFromCustomAPI} 
                     disabled={isLoadingBookings}
@@ -259,10 +261,10 @@ const Profile = () => {
                     {isLoadingBookings ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Loading...
+                        {t?.loading || "Loading..."}
                       </>
                     ) : (
-                      'Refresh'
+                      t?.refresh || 'Refresh'
                     )}
                   </Button>
                 </div>
@@ -272,11 +274,11 @@ const Profile = () => {
                 <div className="mb-6 p-4 bg-muted/50 rounded-lg">
                   <h3 className="text-sm font-semibold mb-3 flex items-center">
                     <CalendarIcon className="h-4 w-4 mr-2" />
-                    Filter by Date Range
+                    {t?.filterByDateRange || "Filter by Date Range"}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div>
-                      <Label htmlFor="fromDate" className="text-xs">From Date</Label>
+                      <Label htmlFor="fromDate" className="text-xs">{t?.fromDate || "From Date"}</Label>
                       <Input
                         id="fromDate"
                         type="date"
@@ -286,7 +288,7 @@ const Profile = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="toDate" className="text-xs">To Date</Label>
+                      <Label htmlFor="toDate" className="text-xs">{t?.toDate || "To Date"}</Label>
                       <Input
                         id="toDate"
                         type="date"
@@ -305,7 +307,7 @@ const Profile = () => {
                       ) : (
                         <CalendarIcon className="h-4 w-4 mr-2" />
                       )}
-                      Search Bookings
+                      {t?.searchBookings || "Search Bookings"}
                     </Button>
                   </div>
                 </div>
@@ -322,10 +324,10 @@ const Profile = () => {
                           </div>
                           <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                              Booking Details
+                              {t?.bookingDetails || "Booking Details"}
                             </h3>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              {lookedUpBooking.status === 'Confirmed' ? 'Confirmed Booking' : 'Custom API Response'}
+                              {lookedUpBooking.status === 'Confirmed' ? (t?.confirmedBooking || 'Confirmed Booking') : 'Custom API Response'}
                             </p>
                           </div>
                         </div>
@@ -544,7 +546,7 @@ const Profile = () => {
                   <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
                     <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">No bookings found</h3>
+                      <h3 className="text-lg font-semibold mb-2">{t?.noBookingsFound || "No bookings found"}</h3>
                       <p className="text-muted-foreground text-sm mb-4">
                         No bookings exist for the selected date range
                       </p>

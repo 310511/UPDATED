@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Star, MapPin, Tag, TrendingDown, Sparkles, Percent, Gift, Zap } from "lucide-react";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Deals = () => {
+  const { t } = useTranslation();
   const deals = [
     {
       id: 1,
@@ -102,29 +104,29 @@ const Deals = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 text-center">
           <Badge className="mb-6 bg-white/90 text-primary border-white/20 px-4 py-2">
             <Sparkles className="w-4 h-4 mr-2 inline" />
-            Limited Time Offers
+            {t?.limitedTime || "Limited Time Offers"}
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-white mb-6">
-            Exclusive Deals
+            {t?.exclusiveOffers || "Exclusive Deals"}
             <span className="block bg-gradient-to-r from-yellow-200 to-white bg-clip-text text-transparent">
-              Save Up to 50%
+              {t?.findBestDeals || "Save Up to 50%"}
             </span>
           </h1>
           <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8">
-            Discover unbeatable offers on premium hotels and resorts. Book now and save big on your next adventure!
+            {t?.findBestDeals || "Discover unbeatable offers on premium hotels and resorts. Book now and save big on your next adventure!"}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white">
               <Percent className="w-5 h-5" />
-              <span className="font-semibold">Up to 50% Off</span>
+              <span className="font-semibold">Up to 50% {t?.off || "Off"}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white">
               <Zap className="w-5 h-5" />
-              <span className="font-semibold">Flash Deals</span>
+              <span className="font-semibold">{t?.flashDeals || "Flash Deals"}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white">
               <Gift className="w-5 h-5" />
-              <span className="font-semibold">Exclusive Perks</span>
+              <span className="font-semibold">{t?.exclusiveOffers || "Exclusive Perks"}</span>
             </div>
           </div>
         </div>
@@ -165,13 +167,13 @@ const Deals = () => {
                   />
                   <div className="absolute top-4 left-4 flex space-x-2">
                     <Badge className="bg-white/90 text-primary border-0 font-semibold backdrop-blur-sm">
-                      {deal.discount}% OFF
+                      {deal.discount}% {t?.off?.toUpperCase() || "OFF"}
                     </Badge>
                     <Badge
                       variant="secondary"
                       className="bg-black/70 text-white border-0 backdrop-blur-sm"
                     >
-                      Premium
+                      {t?.featured || "Premium"}
                     </Badge>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -216,11 +218,11 @@ const Deals = () => {
                     <span className="text-3xl font-bold text-foreground">
                       ${deal.salePrice}
                     </span>
-                    <span className="text-muted-foreground">per night</span>
+                    <span className="text-muted-foreground">{t?.perNight || "per night"}</span>
                   </div>
 
                   <Button className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-xl group-hover:shadow-lg transition-all">
-                    Book Premium Stay
+                    {t?.bookNow || "Book Now"}
                   </Button>
                 </CardContent>
               </Card>
@@ -249,7 +251,7 @@ const Deals = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
-                    {deal.discount}% OFF
+                    {deal.discount}% {t?.off?.toUpperCase() || "OFF"}
                   </Badge>
                 </div>
                 <CardContent className="p-6">
@@ -290,13 +292,13 @@ const Deals = () => {
                       ${deal.salePrice}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      per night
+                      {t?.perNight || "per night"}
                     </span>
                   </div>
 
                   <div className="flex items-center space-x-1 text-sm text-muted-foreground mb-4">
                     <Clock className="h-4 w-4" />
-                    <span>Valid until {deal.validUntil}</span>
+                    <span>{t?.validUntil || "Valid until"} {deal.validUntil}</span>
                   </div>
 
                   <Button
@@ -306,7 +308,7 @@ const Deals = () => {
                       window.location.href = `/hotel/${deal.id}`;
                     }}
                   >
-                    Book This Deal
+                    {t?.bookNow || "Book Now"}
                   </Button>
                 </CardContent>
               </Card>
@@ -327,19 +329,19 @@ const Deals = () => {
               <CardContent className="p-12 text-center relative z-10">
                 <Gift className="w-16 h-16 mx-auto mb-6" />
                 <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                  Never Miss a Deal
+                  {t?.specialDeals || "Never Miss a Deal"}
                 </h2>
                 <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-                  Subscribe to our newsletter and be the first to know about exclusive offers, flash sales, and special promotions
+                  {t?.findBestDeals || "Subscribe to our newsletter and be the first to know about exclusive offers, flash sales, and special promotions"}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                   <input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t?.enterDetails || "Enter your email"}
                     className="flex-1 px-6 py-4 rounded-xl border-0 text-gray-900 shadow-lg"
                   />
                   <Button size="lg" className="bg-white text-primary hover:bg-gray-100 rounded-xl px-8 py-4 font-bold shadow-xl">
-                    Subscribe
+                    {t?.submit || "Subscribe"}
                   </Button>
                 </div>
               </CardContent>

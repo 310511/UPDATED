@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useTranslation } from '@/contexts/TranslationContext';
 
 const PaymentCancelled = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -30,17 +32,17 @@ const PaymentCancelled = () => {
               <AlertCircle className="h-20 w-20 text-orange-600" />
             </div>
             <CardTitle className="text-center text-3xl text-orange-700">
-              Payment Cancelled
+              {t?.paymentCancelled || "Payment Cancelled"}
             </CardTitle>
           </CardHeader>
           
           <CardContent className="space-y-6">
             <div className="text-center">
               <p className="text-lg text-orange-800">
-                You have cancelled the payment process.
+                {t?.paymentCancelledMessage || "You have cancelled the payment process."}
               </p>
               <p className="text-sm text-orange-600 mt-2">
-                Your booking has not been confirmed. No charges have been made to your account.
+                {t?.bookingNotConfirmed || "Your booking has not been confirmed. No charges have been made to your account."}
               </p>
             </div>
 

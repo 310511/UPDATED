@@ -15,6 +15,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
 import BookingDetailsModal, { BookingDetails } from "@/components/BookingDetailsModal";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 interface EnrichedWishlistItem extends WishlistItem {
   hotelDetails?: any;
@@ -22,6 +23,7 @@ interface EnrichedWishlistItem extends WishlistItem {
 }
 
 const Wishlist = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -158,7 +160,7 @@ const Wishlist = () => {
       >
         <h1 className="text-3xl font-bold mb-8 flex items-center gap-2">
           <Heart className="h-8 w-8 text-red-500 fill-red-500" />
-          Your Wishlist
+          {t?.myWishlist || "Your Wishlist"}
         </h1>
 
         <Card>
@@ -166,7 +168,7 @@ const Wishlist = () => {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500 fill-red-500" />
-                Saved Hotels
+                {t?.savedHotels || "Saved Hotels"}
               </CardTitle>
               <Button 
                 onClick={fetchWishlist} 
@@ -177,10 +179,10 @@ const Wishlist = () => {
                 {isLoadingWishlist ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
+                    {t?.loading || "Loading..."}
                   </>
                 ) : (
-                  'Refresh'
+                  t?.refresh || 'Refresh'
                 )}
               </Button>
             </div>
@@ -191,7 +193,7 @@ const Wishlist = () => {
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
-                  <p className="text-sm text-muted-foreground">Loading wishlist...</p>
+                  <p className="text-sm text-muted-foreground">{t?.loading || "Loading wishlist..."}</p>
                 </div>
               </div>
             )}
@@ -208,9 +210,9 @@ const Wishlist = () => {
               <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
                 <Heart className="h-16 w-16 text-muted-foreground mb-4" />
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">No hotels in wishlist</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t?.noSavedHotels || "No saved hotels yet"}</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Start adding hotels to your wishlist by clicking the heart icon on hotel details pages
+                    {t?.startAddingHotels || "Start adding hotels to your wishlist by clicking the heart icon on hotel details pages"}
                   </p>
                 </div>
                 <Button onClick={() => navigate('/search')} variant="outline">

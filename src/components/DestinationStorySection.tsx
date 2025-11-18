@@ -15,6 +15,7 @@ import {
   Palmtree,
   Building2
 } from "lucide-react";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 interface Destination {
   id: string;
@@ -77,6 +78,7 @@ const destinations: Destination[] = [
 ];
 
 const DestinationStorySection = () => {
+  const { t } = useTranslation();
   const [activeDestination, setActiveDestination] = useState(0);
   const destination = destinations[activeDestination];
   const Icon = destination.icon;
@@ -95,13 +97,13 @@ const DestinationStorySection = () => {
         <div className="text-center mb-12">
           <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 px-4 py-2">
             <MapPin className="w-4 h-4 mr-2 inline" />
-            Destination Stories
+            {t?.destinationStories || "Destination Stories"}
           </Badge>
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
-            Immerse Yourself in Culture
+            {t?.immerseYourselfInCulture || "Immerse Yourself in Culture"}
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Explore destinations through the eyes of travelers and locals
+            {t?.exploreDestinationsThroughEyes || "Explore destinations through the eyes of travelers and locals"}
           </p>
         </div>
 
@@ -148,7 +150,7 @@ const DestinationStorySection = () => {
                 </div>
                 <div className="bg-white/95 backdrop-blur-md rounded-full px-4 py-2 shadow-xl flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
-                  <span className="font-semibold text-gray-900 text-sm">Best: {destination.bestTime}</span>
+                  <span className="font-semibold text-gray-900 text-sm">{t?.bestTimeToVisit || "Best"}: {destination.bestTime}</span>
                 </div>
               </div>
             </div>
@@ -185,7 +187,7 @@ const DestinationStorySection = () => {
               <div className="mb-8">
                 <h4 className="font-bold text-foreground mb-4 flex items-center gap-2">
                   <Camera className="w-5 h-5 text-primary" />
-                  Must-See Highlights
+                  {t?.mustSeeHighlights || "Must-See Highlights"}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {destination.highlights.map((highlight, index) => (
@@ -206,7 +208,7 @@ const DestinationStorySection = () => {
                     size="lg"
                     className={`w-full rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-r ${destination.color}`}
                   >
-                    Explore {destination.name}
+                    {t?.exploreDestination || "Explore Destination"} {destination.name}
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
@@ -217,7 +219,7 @@ const DestinationStorySection = () => {
                     className="w-full rounded-xl font-semibold border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300"
                   >
                     <Plane className="w-5 h-5 mr-2" />
-                    Find Hotels
+                    {t?.findHotels || "Find Hotels"}
                   </Button>
                 </Link>
               </div>

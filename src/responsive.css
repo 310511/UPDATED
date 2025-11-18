@@ -1338,8 +1338,13 @@ header .md\\:hidden.w-full.border-t .px-4.py-2 {
       max-width: calc(100vw - 2rem) !important;
       height: 400px !important;
       max-height: 55vh !important;
-      bottom: 4.5rem !important;
+      bottom: 6rem !important; /* Moved up from 4.5rem to 6rem to match chatbot button */
       left: 0.75rem !important;
+    }
+    
+    /* Move chatbot button upward on small mobile */
+    .animated-avatar {
+      bottom: 5rem !important; /* 80px from bottom */
     }
   }
   
