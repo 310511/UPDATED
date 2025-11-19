@@ -91,6 +91,72 @@ const HotelRoomDetails: React.FC<HotelRoomDetailsProps> = ({ bookingCode, onClos
     // eslint-disable-next-line
   }, [bookingCode, preferredCurrency]);
 
+  // Non-blocking translation in background - defined first to avoid initialization error
+  const translateInBackground = useCallback(async (data: HotelRoomResponse, language: string) => {
+    setIsTranslating(true);
+    try {
+      const { translateHotelData } = await import("@/services/apiTranslationService");
+      const translated = await translateHotelData(data, language);
+      
+      // Update cache with translated data
+      roomDetailsCache.set(bookingCode!, { data: translated, timestamp: Date.now() });
+      
+      // Update UI with translated data
+      setHotelData(translated);
+    } catch (err) {
+      console.error('Translation error:', err);
+      // Keep original data if translation fails
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [bookingCode]);
+
+  const processRoomData = useCallback((response: any) => {
+    if (response && response.HotelResult) {
+      let hotelResult = response.HotelResult;
+      
+      // Get current language
+      const currentLanguage = localStorage.getItem("language") || "en";
+      
+      // Convert room prices synchronously (fast operation)
+      const sourceCurrency = hotelResult.Currency || "USD";
+      let processedRooms = hotelResult.Rooms || [];
+      let processedData = hotelResult;
+      
+      if (sourceCurrency === "USD" && preferredCurrency !== "USD") {
+        console.log(`💱 Converting room prices from ${sourceCurrency} to ${preferredCurrency}`);
+        // Convert all rooms synchronously (fast operation)
+        const convertedRooms = processedRooms.map((room: any) => 
+          convertRoomPrices(room, preferredCurrency)
+        );
+        
+        processedData = {
+          ...hotelResult,
+          Currency: preferredCurrency,
+          Rooms: convertedRooms
+        };
+      }
+      
+      // Cache the processed data immediately
+      roomDetailsCache.set(bookingCode!, { data: processedData, timestamp: Date.now() });
+      
+      // Show data immediately (optimistic update)
+      setHotelData(processedData);
+      setLoading(false);
+      
+      // Translate in background if needed (non-blocking - doesn't delay UI)
+      if (currentLanguage !== "en") {
+        // Use setTimeout to defer translation and not block UI
+        setTimeout(() => {
+          translateInBackground(processedData, currentLanguage);
+        }, 0);
+      }
+    } else {
+      setError("No room details found");
+      setLoading(false);
+    }
+  }, [bookingCode, preferredCurrency, translateInBackground]);
+
   const fetchRoomDetails = useCallback(async () => {
     if (!bookingCode) return;
 
@@ -140,73 +206,7 @@ const HotelRoomDetails: React.FC<HotelRoomDetailsProps> = ({ bookingCode, onClos
       );
       setLoading(false);
     }
-  }, [bookingCode, preferredCurrency, getCachedData]);
-
-  const processRoomData = useCallback((response: any) => {
-    if (response && response.HotelResult) {
-      let hotelResult = response.HotelResult;
-      
-      // Get current language
-      const currentLanguage = localStorage.getItem("language") || "en";
-      
-      // Convert room prices synchronously (fast operation)
-      const sourceCurrency = hotelResult.Currency || "USD";
-      let processedRooms = hotelResult.Rooms || [];
-      let processedData = hotelResult;
-      
-      if (sourceCurrency === "USD" && preferredCurrency !== "USD") {
-        console.log(`💱 Converting room prices from ${sourceCurrency} to ${preferredCurrency}`);
-        // Convert all rooms synchronously (fast operation)
-        const convertedRooms = processedRooms.map((room: any) => 
-          convertRoomPrices(room, preferredCurrency)
-        );
-        
-        processedData = {
-          ...hotelResult,
-          Currency: preferredCurrency,
-          Rooms: convertedRooms
-        };
-      }
-      
-      // Cache the processed data immediately
-      roomDetailsCache.set(bookingCode!, { data: processedData, timestamp: Date.now() });
-      
-      // Show data immediately (optimistic update)
-      setHotelData(processedData);
-      setLoading(false);
-      
-      // Translate in background if needed (non-blocking - doesn't delay UI)
-      if (currentLanguage !== "en") {
-        // Use setTimeout to defer translation and not block UI
-        setTimeout(() => {
-          translateInBackground(processedData, currentLanguage);
-        }, 0);
-      }
-    } else {
-      setError("No room details found");
-      setLoading(false);
-    }
-  }, [bookingCode, preferredCurrency, translateInBackground]);
-
-  // Non-blocking translation in background
-  const translateInBackground = useCallback(async (data: HotelRoomResponse, language: string) => {
-    setIsTranslating(true);
-    try {
-      const { translateHotelData } = await import("@/services/apiTranslationService");
-      const translated = await translateHotelData(data, language);
-      
-      // Update cache with translated data
-      roomDetailsCache.set(bookingCode!, { data: translated, timestamp: Date.now() });
-      
-      // Update UI with translated data
-      setHotelData(translated);
-    } catch (err) {
-      console.error('Translation error:', err);
-      // Keep original data if translation fails
-    } finally {
-      setIsTranslating(false);
-    }
-  }, [bookingCode]);
+  }, [bookingCode, preferredCurrency, getCachedData, processRoomData, translateInBackground]);
 
   // Memoize room list to avoid re-renders
   const roomList = useMemo(() => {
